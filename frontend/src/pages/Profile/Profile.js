@@ -71,6 +71,16 @@ const Profile = () => {
       // If successful, show success message
       setMessage('Profile updated successfully!');
       setError('');
+
+      // Verify the data was saved
+      const savedData = localStorage.getItem('userData');
+      console.log('Verified saved user data:', savedData);
+      
+      // Optional: Update form data with the result
+      setFormData(prevData => ({
+        ...prevData,
+        ...result
+      }));
     } catch (err) {
       console.error('Profile update error:', err);
       setError(err.message || 'Failed to update profile');
