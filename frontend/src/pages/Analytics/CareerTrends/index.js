@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   Box,
   Container,
@@ -49,6 +50,7 @@ const mockData = {
 };
 
 const CareerTrends = () => {
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [selectedIndustry, setSelectedIndustry] = useState('All');
@@ -78,13 +80,39 @@ const CareerTrends = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Career Trends & Insights
-      </Typography>
+    <Container maxWidth="lg">
+      <Box sx={{ 
+        mt: 10,
+        mb: 4,
+        position: 'relative',
+        zIndex: theme.zIndex.appBar + 1,
+        backgroundColor: theme.palette.background.default,
+        padding: '16px 0'
+      }}>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{
+            fontWeight: 600,
+            color: theme.palette.text.primary,
+            position: 'relative',
+            zIndex: theme.zIndex.appBar + 1
+          }}
+        >
+          Career Trends & Insights
+        </Typography>
+      </Box>
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 4 }}>
+      <Paper 
+        elevation={1}
+        sx={{ 
+          p: 3,
+          mb: 4,
+          borderRadius: 2,
+          backgroundColor: theme.palette.background.paper
+        }}
+      >
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
             <TextField
