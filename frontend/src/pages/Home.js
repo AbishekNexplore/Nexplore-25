@@ -8,7 +8,6 @@ import {
   Grid, 
   Card, 
   CardContent,
-  CardMedia 
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
