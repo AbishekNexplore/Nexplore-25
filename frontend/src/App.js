@@ -12,13 +12,13 @@ import theme from './theme/theme';
 import Navbar from './components/layout/Navbar';
 
 // Page components
-import Home from './pages/Home';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ChatBot from './pages/Chat/ChatBot';
 import ResumeFeedback from './pages/Resume/ResumeFeedback';
 import CareerTrends from './pages/Analytics/CareerTrends';
+import Profile from './pages/Profile/Profile';
 
 // Auth Context
 import { AuthProvider } from './context/AuthContext';
@@ -43,7 +43,7 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   const dispatch = useDispatch();
-  const { loading } = useSelector(state => state.auth);
+  const { loading, isAuthenticated } = useSelector(state => state.auth);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -64,16 +64,50 @@ function App() {
     <AuthProvider>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Navbar />
+        {isAuthenticated && <Navbar />}
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* Redirect root to login or dashboard based on auth status */}
+          <Route 
+            path="/" 
+            element={
+              isAuthenticated ? 
+              <Navigate to="/dashboard" replace /> : 
+              <Navigate to="/login" replace />
+            } 
+          />
+
+          {/* Public Routes */}
+          <Route 
+            path="/login" 
+            element={
+              isAuthenticated ? 
+              <Navigate to="/dashboard" replace /> : 
+              <Login />
+            } 
+          />
+          <Route 
+            path="/register" 
+            element={
+              isAuthenticated ? 
+              <Navigate to="/dashboard" replace /> : 
+              <Register />
+            } 
+          />
+
+          {/* Protected Routes */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/career-trends"
+            element={
+              <ProtectedRoute>
+                <CareerTrends />
               </ProtectedRoute>
             }
           />
@@ -94,12 +128,22 @@ function App() {
             }
           />
           <Route
-            path="/career-trends"
+            path="/profile"
             element={
               <ProtectedRoute>
-                <CareerTrends />
+                <Profile />
               </ProtectedRoute>
             }
+          />
+
+          {/* Catch all route - redirect to login or dashboard */}
+          <Route 
+            path="*" 
+            element={
+              isAuthenticated ? 
+              <Navigate to="/dashboard" replace /> : 
+              <Navigate to="/login" replace />
+            } 
           />
         </Routes>
       </ThemeProvider>
