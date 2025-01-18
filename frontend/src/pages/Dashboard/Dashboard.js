@@ -1,446 +1,730 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import {
     Grid,
+    Paper,
     Typography,
     Box,
-    CircularProgress,
     Card,
     CardContent,
-    IconButton,
+    Button,
     Avatar,
-    LinearProgress,
-    Chip,
     List,
     ListItem,
-    ListItemText,
     ListItemIcon,
-    ListItemAvatar,
-    Divider
+    ListItemText,
+    Chip,
+    IconButton,
+    LinearProgress,
+    Divider,
+    Container,
+    CircularProgress,
+    useTheme,
+    alpha
 } from '@mui/material';
 import {
     TrendingUp,
-    School,
+    Message,
     Description,
-    Chat,
-    Person,
-    Assessment,
+    School,
     Timeline,
-    EmojiEvents,
-    Speed,
-    WorkOutline,
     Star,
-    Assignment,
     CheckCircleOutline,
-    LocalLibrary
+    Business,
+    LocationOn,
+    AccessTime,
+    CheckCircle,
+    RadioButtonUnchecked,
+    ArrowForward
 } from '@mui/icons-material';
-import { getCurrentUser } from '../../store/slices/authSlice';
-
-// Custom styled components
-const StyledCard = ({ children, ...props }) => (
-    <Card
-        {...props}
-        sx={{
-            height: '100%',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-            },
-            ...props.sx
-        }}
-    >
-        {children}
-    </Card>
-);
+import { useSelector } from 'react-redux';
 
 const Dashboard = () => {
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const { user, loading } = useSelector((state) => state.auth);
+    const user = useSelector(state => state.auth.user);
+    const theme = useTheme();
 
-    useEffect(() => {
-        if (!user) {
-            dispatch(getCurrentUser());
-        }
-    }, [dispatch, user]);
+    if (!user) {
+        return (
+            <Container 
+                maxWidth="lg" 
+                sx={{ 
+                    mt: { xs: 8, sm: 9 }, 
+                    mb: 4,
+                    pt: 3 
+                }}
+            >
+                <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    minHeight: '80vh' 
+                }}>
+                    <CircularProgress size={60} />
+                </Box>
+            </Container>
+        );
+    }
 
+    // Featured actions with descriptions and progress
     const featuredActions = [
         {
             title: 'Career Trends',
-            icon: <TrendingUp sx={{ fontSize: 40 }} />,
-            description: 'Explore industry trends and insights',
-            color: '#2563eb',
-            path: '/career-trends',
-            progress: 75
+            icon: <TrendingUp />,
+            description: 'Analyze industry trends and salary insights',
+            link: '/career-trends',
+            stats: {
+                trendsAnalyzed: 124,
+                industriesTracked: 8,
+                lastUpdated: '2 hours ago'
+            }
         },
         {
             title: 'AI Chat Assistant',
-            icon: <Chat sx={{ fontSize: 40 }} />,
+            icon: <Message />,
             description: 'Get personalized career guidance',
-            color: '#16a34a',
-            path: '/chatbot',
-            progress: 100
+            link: '/chatbot',
+            stats: {
+                chatsCompleted: 15,
+                questionsAnswered: 45,
+                avgResponseTime: '2 min'
+            }
         },
         {
             title: 'Resume Feedback',
-            icon: <Description sx={{ fontSize: 40 }} />,
+            icon: <Description />,
             description: 'Get AI-powered resume analysis',
-            color: '#9333ea',
-            path: '/resume-feedback',
-            progress: 40
+            link: '/resume',
+            stats: {
+                resumeScore: 85,
+                improvements: 12,
+                lastAnalysis: '1 day ago'
+            }
         },
         {
             title: 'Learning Path',
-            icon: <School sx={{ fontSize: 40 }} />,
+            icon: <School />,
             description: 'Track your learning progress',
-            color: '#ea580c',
-            path: '/learning-path',
-            progress: 60
+            link: '/learning-path',
+            stats: {
+                coursesCompleted: 4,
+                hoursLearned: 28,
+                nextMilestone: '5 courses'
+            }
         }
     ];
 
     const quickStats = [
-        { label: 'Profile Strength', value: '85%', icon: <Speed color="primary" /> },
-        { label: 'Skills Matched', value: '12/15', icon: <Assessment color="success" /> },
-        { label: 'Learning Hours', value: '24h', icon: <Timeline color="info" /> },
-        { label: 'Achievements', value: '8', icon: <EmojiEvents color="warning" /> }
+        {
+            title: 'Profile Strength',
+            value: '85%',
+            icon: <CheckCircle color="success" />,
+            trend: '+5%',
+            description: 'Your profile is performing well',
+            color: 'success.main'
+        },
+        {
+            title: 'Skills Matched',
+            value: '24/30',
+            icon: <Star color="warning" />,
+            trend: '+3',
+            description: 'Required skills for your target role',
+            color: 'warning.main'
+        },
+        {
+            title: 'Learning Hours',
+            value: '28h',
+            icon: <Timeline color="info" />,
+            trend: '+2h',
+            description: 'Total learning time this month',
+            color: 'info.main'
+        },
+        {
+            title: 'Achievements',
+            value: '12',
+            icon: <CheckCircleOutline color="primary" />,
+            trend: '+2',
+            description: 'Badges and certifications earned',
+            color: 'primary.main'
+        }
     ];
 
     const recentActivities = [
         {
             type: 'course',
             title: 'Completed Python Basics',
-            time: '2 hours ago',
-            icon: <LocalLibrary sx={{ color: '#16a34a' }} />
+            timestamp: '2 hours ago',
+            icon: <School color="primary" />,
+            color: 'primary'
         },
         {
             type: 'resume',
             title: 'Resume Analysis Complete',
-            time: '1 day ago',
-            icon: <Assignment sx={{ color: '#9333ea' }} />
+            timestamp: '1 day ago',
+            icon: <Description color="secondary" />,
+            color: 'secondary'
         },
         {
-            type: 'achievement',
-            title: 'Earned "Fast Learner" Badge',
-            time: '2 days ago',
-            icon: <Star sx={{ color: '#eab308' }} />
+            type: 'skill',
+            title: 'New Skill: React.js',
+            timestamp: '2 days ago',
+            icon: <Star color="warning" />,
+            color: 'warning'
+        },
+        {
+            type: 'job',
+            title: 'Applied to Senior Developer',
+            timestamp: '3 days ago',
+            icon: <Business color="info" />,
+            color: 'info'
         }
     ];
 
     const recommendedSkills = [
         {
-            skill: 'React.js',
+            name: 'React.js',
+            category: 'Technical',
             relevance: 95,
-            category: 'Technical'
+            progress: 60
         },
         {
-            skill: 'Data Analysis',
-            relevance: 88,
-            category: 'Analytics'
+            name: 'Node.js',
+            category: 'Technical',
+            relevance: 90,
+            progress: 40
         },
         {
-            skill: 'Project Management',
-            relevance: 82,
-            category: 'Soft Skills'
+            name: 'Data Analysis',
+            category: 'Analytics',
+            relevance: 85,
+            progress: 30
+        },
+        {
+            name: 'Project Management',
+            category: 'Soft Skills',
+            relevance: 80,
+            progress: 70
         }
     ];
 
     const jobMatches = [
         {
-            title: 'Senior Software Engineer',
+            title: 'Senior Full Stack Developer',
             company: 'Tech Corp',
-            match: 92,
-            new: true
+            location: 'San Francisco, CA',
+            matchPercentage: 95,
+            isNew: true,
+            postedDate: '2 days ago',
+            skills: ['React.js', 'Node.js', 'MongoDB']
         },
         {
-            title: 'Full Stack Developer',
+            title: 'Lead Software Engineer',
             company: 'Innovation Labs',
-            match: 88,
-            new: true
+            location: 'New York, NY',
+            matchPercentage: 90,
+            isNew: true,
+            postedDate: '3 days ago',
+            skills: ['Java', 'Spring Boot', 'AWS']
         },
         {
-            title: 'Frontend Engineer',
+            title: 'Frontend Developer',
             company: 'Digital Solutions',
-            match: 85,
-            new: false
+            location: 'Remote',
+            matchPercentage: 85,
+            isNew: false,
+            postedDate: '5 days ago',
+            skills: ['React.js', 'Angular', 'Vue.js']
         }
     ];
 
-    if (loading) {
-        return (
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center',
-                height: 'calc(100vh - 64px)' 
-            }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
     return (
-        <Box sx={{ p: 3, backgroundColor: '#f8fafc' }}>
-            {/* Welcome Section */}
-            <Box sx={{ 
-                mb: 4, 
-                p: 3, 
-                borderRadius: 2,
-                background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
-                color: 'white'
-            }}>
-                <Grid container alignItems="center" spacing={3}>
-                    <Grid item>
-                        <Avatar
-                            sx={{ 
-                                width: 64, 
-                                height: 64,
-                                bgcolor: 'white',
-                                color: '#2563eb'
-                            }}
-                        >
-                            <Person sx={{ fontSize: 40 }} />
-                        </Avatar>
-                    </Grid>
-                    <Grid item>
-                        <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                            Welcome back, {user?.name || 'User'}!
-                        </Typography>
-                        <Typography variant="subtitle1" sx={{ mt: 1, opacity: 0.9 }}>
-                            Let's continue your career development journey
-                        </Typography>
-                    </Grid>
-                </Grid>
-            </Box>
-
-            {/* Quick Stats */}
+        <Container 
+            maxWidth="xl" 
+            sx={{ 
+                mt: { xs: 8, sm: 9 }, 
+                mb: 4,
+                pt: 3, 
+                position: 'relative',
+                zIndex: 0,
+                '& .MuiPaper-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: theme.shadows[8]
+                    }
+                }
+            }}
+        >
+            {/* Welcome Section with Profile Overview */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                {quickStats.map((stat, index) => (
-                    <Grid item xs={12} sm={6} md={3} key={index}>
-                        <StyledCard>
-                            <CardContent sx={{ textAlign: 'center' }}>
-                                <IconButton
-                                    sx={{
-                                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                                        mb: 2
-                                    }}
-                                    size="large"
-                                >
-                                    {stat.icon}
-                                </IconButton>
-                                <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-                                    {stat.value}
+                <Grid item xs={12} md={8}>
+                    <Paper 
+                        sx={{ 
+                            p: 4, 
+                            height: '100%',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                            color: 'white',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%)',
+                                zIndex: 1
+                            },
+                            '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: '30%',
+                                background: 'linear-gradient(to top, rgba(0,0,0,0.1), transparent)',
+                                zIndex: 1
+                            }
+                        }}
+                        elevation={4}
+                    >
+                        <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 4,
+                            position: 'relative',
+                            zIndex: 2
+                        }}>
+                            <Avatar 
+                                sx={{ 
+                                    width: 100, 
+                                    height: 100,
+                                    border: '4px solid rgba(255,255,255,0.2)',
+                                    boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                                    background: 'linear-gradient(45deg, #fff 30%, #f5f5f5 90%)',
+                                    color: theme.palette.primary.main,
+                                    fontSize: '2.5rem',
+                                    fontWeight: 600
+                                }}
+                            >
+                                {user?.name?.charAt(0) || 'U'}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h3" component="h1" sx={{ 
+                                    fontWeight: 700,
+                                    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                    mb: 1,
+                                    letterSpacing: '-0.5px'
+                                }}>
+                                    Welcome back, {user?.name || 'User'}!
                                 </Typography>
-                                <Typography variant="body2" color="textSecondary">
-                                    {stat.label}
+                                <Typography variant="h6" sx={{ 
+                                    opacity: 0.95,
+                                    fontWeight: 500,
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                    letterSpacing: '0.5px'
+                                }}>
+                                    Let's continue your journey to success
                                 </Typography>
-                            </CardContent>
-                        </StyledCard>
-                    </Grid>
-                ))}
+                            </Box>
+                        </Box>
+                    </Paper>
+                </Grid>
+
+                {/* Quick Stats Section */}
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ 
+                        p: 4,
+                        height: '100%',
+                        background: alpha(theme.palette.background.paper, 0.9),
+                        backdropFilter: 'blur(10px)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center'
+                    }}>
+                        <Typography variant="h6" sx={{ 
+                            mb: 3, 
+                            fontWeight: 600, 
+                            color: 'text.primary',
+                            position: 'relative',
+                            '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                bottom: -8,
+                                left: 0,
+                                width: 32,
+                                height: 2,
+                                bgcolor: theme.palette.primary.main,
+                                borderRadius: 1
+                            }
+                        }}>
+                            Quick Stats
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {[
+                                { 
+                                    label: 'Courses Completed', 
+                                    value: '12', 
+                                    icon: <CheckCircle sx={{ fontSize: 28 }} color="success" />,
+                                    trend: '+2 this week'
+                                },
+                                { 
+                                    label: 'Hours Learning', 
+                                    value: '48', 
+                                    icon: <AccessTime sx={{ fontSize: 28 }} color="primary" />,
+                                    trend: '+5 hrs today'
+                                }
+                            ].map((stat, index) => (
+                                <Grid item xs={6} key={index}>
+                                    <Box sx={{ 
+                                        textAlign: 'center',
+                                        p: 2,
+                                        borderRadius: 2,
+                                        bgcolor: theme.palette.mode === 'dark' 
+                                            ? alpha(theme.palette.primary.main, 0.1) 
+                                            : alpha(theme.palette.primary.light, 0.1),
+                                        '&:hover': {
+                                            bgcolor: theme.palette.mode === 'dark'
+                                                ? alpha(theme.palette.primary.main, 0.15)
+                                                : alpha(theme.palette.primary.light, 0.15)
+                                        }
+                                    }}>
+                                        {stat.icon}
+                                        <Typography variant="h5" sx={{ 
+                                            mt: 1,
+                                            mb: 0.5,
+                                            fontWeight: 'bold',
+                                            color: theme.palette.mode === 'dark' 
+                                                ? theme.palette.primary.light
+                                                : theme.palette.primary.main
+                                        }}>
+                                            {stat.value}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                            {stat.label}
+                                        </Typography>
+                                        <Typography variant="caption" 
+                                            sx={{ 
+                                                color: theme.palette.success.main,
+                                                bgcolor: alpha(theme.palette.success.main, 0.1),
+                                                px: 1,
+                                                py: 0.5,
+                                                borderRadius: 1,
+                                                fontWeight: 500
+                                            }}
+                                        >
+                                            {stat.trend}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Paper>
+                </Grid>
             </Grid>
 
-            {/* Featured Actions */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-                Featured Tools
+            {/* Featured Actions Section */}
+            <Typography variant="h5" sx={{ 
+                mb: 3, 
+                fontWeight: 700,
+                color: 'text.primary',
+                position: 'relative',
+                pl: 2,
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 4,
+                    height: '60%',
+                    bgcolor: theme.palette.primary.main,
+                    borderRadius: 2
+                }
+            }}>
+                Featured Actions
             </Typography>
+
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 {featuredActions.map((action, index) => (
                     <Grid item xs={12} sm={6} md={3} key={index}>
-                        <StyledCard>
-                            <CardContent
-                                sx={{
+                        <Paper sx={{ 
+                            p: 0,
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            bgcolor: theme.palette.mode === 'dark' 
+                                ? alpha(theme.palette.primary.main, 0.1)
+                                : alpha(theme.palette.background.paper, 0.9)
+                        }}>
+                            <Box sx={{ 
+                                p: 3,
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}>
+                                <Box sx={{
                                     display: 'flex',
-                                    flexDirection: 'column',
-                                    height: '100%',
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => navigate(action.path)}
-                            >
-                                <Box
-                                    sx={{
-                                        backgroundColor: `${action.color}15`,
-                                        borderRadius: '50%',
-                                        width: 64,
-                                        height: 64,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        mb: 2,
-                                        color: action.color
-                                    }}
-                                >
-                                    {action.icon}
+                                    alignItems: 'flex-start',
+                                    justifyContent: 'space-between',
+                                    mb: 2
+                                }}>
+                                    <Avatar
+                                        sx={{
+                                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                            color: theme.palette.primary.main,
+                                            width: 48,
+                                            height: 48
+                                        }}
+                                    >
+                                        {action.icon}
+                                    </Avatar>
                                 </Box>
-                                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                                <Typography variant="h6" gutterBottom sx={{ 
+                                    fontWeight: 600,
+                                    color: theme.palette.text.primary,
+                                    mb: 1
+                                }}>
                                     {action.title}
                                 </Typography>
-                                <Typography
-                                    variant="body2"
-                                    color="textSecondary"
-                                    sx={{ mb: 2, flexGrow: 1 }}
-                                >
+                                <Typography variant="body2" sx={{ 
+                                    color: theme.palette.text.secondary,
+                                    mb: 2,
+                                    flex: 1
+                                }}>
                                     {action.description}
                                 </Typography>
-                                <Box sx={{ width: '100%' }}>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={action.progress}
-                                        sx={{
-                                            height: 6,
-                                            borderRadius: 3,
-                                            backgroundColor: `${action.color}20`,
-                                            '& .MuiLinearProgress-bar': {
-                                                backgroundColor: action.color
-                                            }
-                                        }}
-                                    />
-                                    <Typography
-                                        variant="caption"
-                                        color="textSecondary"
-                                        sx={{ mt: 0.5, display: 'block' }}
-                                    >
-                                        {action.progress}% Complete
-                                    </Typography>
-                                </Box>
-                            </CardContent>
-                        </StyledCard>
+                            </Box>
+                            <Divider />
+                            <Box sx={{ 
+                                p: 2,
+                                display: 'flex',
+                                justifyContent: 'center'
+                            }}>
+                                <Button 
+                                    component={Link}
+                                    to={action.link}
+                                    endIcon={<ArrowForward />}
+                                    fullWidth
+                                    sx={{ 
+                                        fontWeight: 600,
+                                        borderRadius: 2,
+                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                        color: theme.palette.primary.main,
+                                        '&:hover': {
+                                            bgcolor: alpha(theme.palette.primary.main, 0.2)
+                                        }
+                                    }}
+                                >
+                                    Continue
+                                </Button>
+                            </Box>
+                        </Paper>
                     </Grid>
                 ))}
             </Grid>
 
-            {/* Additional Sections */}
-            <Grid container spacing={3}>
-                {/* Recent Activities */}
-                <Grid item xs={12} md={4}>
-                    <StyledCard>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                                Recent Activities
-                            </Typography>
-                            <List>
-                                {recentActivities.map((activity, index) => (
-                                    <React.Fragment key={index}>
-                                        <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                                            <ListItemIcon>
-                                                {activity.icon}
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary={activity.title}
-                                                secondary={activity.time}
-                                            />
-                                        </ListItem>
-                                        {index < recentActivities.length - 1 && <Divider />}
-                                    </React.Fragment>
-                                ))}
-                            </List>
-                        </CardContent>
-                    </StyledCard>
-                </Grid>
+            {/* Recent Activities Section */}
+            <Typography variant="h5" sx={{ 
+                mb: 3, 
+                fontWeight: 600,
+                color: 'text.primary',
+                position: 'relative',
+                '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: -8,
+                    left: 0,
+                    width: 40,
+                    height: 3,
+                    borderRadius: 1.5,
+                    bgcolor: 'primary.main'
+                }
+            }}>
+                Recent Activities
+            </Typography>
 
-                {/* Recommended Skills */}
-                <Grid item xs={12} md={4}>
-                    <StyledCard>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                                Recommended Skills
-                            </Typography>
-                            {recommendedSkills.map((skill, index) => (
-                                <Box key={index} sx={{ mb: 2 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                        <Typography variant="body1">
-                                            {skill.skill}
-                                            <Chip
-                                                label={skill.category}
-                                                size="small"
-                                                sx={{ ml: 1, backgroundColor: '#e2e8f0' }}
-                                            />
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            {skill.relevance}% Match
-                                        </Typography>
-                                    </Box>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={skill.relevance}
-                                        sx={{
-                                            height: 6,
-                                            borderRadius: 3,
-                                            backgroundColor: '#e2e8f0'
-                                        }}
-                                    />
-                                </Box>
-                            ))}
-                        </CardContent>
-                    </StyledCard>
-                </Grid>
-
-                {/* Job Matches */}
-                <Grid item xs={12} md={4}>
-                    <StyledCard>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                                Top Job Matches
-                            </Typography>
-                            <List>
-                                {jobMatches.map((job, index) => (
-                                    <React.Fragment key={index}>
-                                        <ListItem
-                                            alignItems="flex-start"
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12}>
+                    <Paper sx={{ p: 3 }}>
+                        <List sx={{ 
+                            '& .MuiListItem-root': { 
+                                px: 0,
+                                '&:hover': {
+                                    bgcolor: 'transparent'
+                                }
+                            }
+                        }}>
+                            {recentActivities.map((activity, index) => (
+                                <ListItem
+                                    key={index}
+                                    sx={{
+                                        position: 'relative',
+                                        '&::before': index !== recentActivities.length - 1 ? {
+                                            content: '""',
+                                            position: 'absolute',
+                                            left: 20,
+                                            top: 40,
+                                            bottom: -20,
+                                            width: 2,
+                                            bgcolor: 'divider'
+                                        } : {}
+                                    }}
+                                >
+                                    <ListItemIcon sx={{ minWidth: 42 }}>
+                                        <Avatar
                                             sx={{
-                                                px: 0,
-                                                cursor: 'pointer',
-                                                '&:hover': { backgroundColor: '#f1f5f9' }
+                                                width: 32,
+                                                height: 32,
+                                                bgcolor: `${activity.color}.light`,
+                                                color: `${activity.color}.main`
                                             }}
                                         >
-                                            <ListItemAvatar>
-                                                <Avatar sx={{ bgcolor: '#2563eb' }}>
-                                                    <WorkOutline />
-                                                </Avatar>
-                                            </ListItemAvatar>
-                                            <ListItemText
-                                                primary={
-                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                        {job.title}
-                                                        {job.new && (
-                                                            <Chip
-                                                                label="New"
-                                                                size="small"
-                                                                sx={{
-                                                                    ml: 1,
-                                                                    backgroundColor: '#dcfce7',
-                                                                    color: '#16a34a'
-                                                                }}
-                                                            />
-                                                        )}
-                                                    </Box>
-                                                }
-                                                secondary={
-                                                    <>
-                                                        <Typography component="span" variant="body2">
-                                                            {job.company}
-                                                        </Typography>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                                                            <CheckCircleOutline sx={{ color: '#16a34a', fontSize: 16, mr: 0.5 }} />
-                                                            <Typography variant="body2" color="success.main">
-                                                                {job.match}% Match
-                                                            </Typography>
-                                                        </Box>
-                                                    </>
-                                                }
-                                            />
-                                        </ListItem>
-                                        {index < jobMatches.length - 1 && <Divider />}
-                                    </React.Fragment>
-                                ))}
-                            </List>
-                        </CardContent>
-                    </StyledCard>
+                                            {activity.icon}
+                                        </Avatar>
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={
+                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                {activity.title}
+                                            </Typography>
+                                        }
+                                        secondary={
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                {activity.timestamp}
+                                            </Typography>
+                                        }
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Paper>
                 </Grid>
             </Grid>
-        </Box>
+
+            {/* Activity and Skills Section */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 3, height: '100%' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                            <Typography variant="h6">Recommended Skills</Typography>
+                            <Button endIcon={<ArrowForward />} size="small">View All</Button>
+                        </Box>
+                        <List>
+                            {recommendedSkills.map((skill, index) => (
+                                <React.Fragment key={index}>
+                                    <ListItem sx={{ px: 0 }}>
+                                        <ListItemText
+                                            primary={
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                    <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
+                                                        {skill.name}
+                                                    </Typography>
+                                                    <Chip
+                                                        label={`${skill.relevance}% Match`}
+                                                        size="small"
+                                                        color="primary"
+                                                    />
+                                                </Box>
+                                            }
+                                            secondary={
+                                                <Box sx={{ width: '100%' }}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {skill.category}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {skill.progress}%
+                                                        </Typography>
+                                                    </Box>
+                                                    <LinearProgress
+                                                        variant="determinate"
+                                                        value={skill.progress}
+                                                        sx={{ height: 6, borderRadius: 3 }}
+                                                    />
+                                                </Box>
+                                            }
+                                        />
+                                    </ListItem>
+                                    {index < recommendedSkills.length - 1 && <Divider />}
+                                </React.Fragment>
+                            ))}
+                        </List>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 3, height: '100%' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                            <Typography variant="h6">Job Matches</Typography>
+                            <Button endIcon={<ArrowForward />} size="small">View All</Button>
+                        </Box>
+                        <List>
+                            {jobMatches.map((job, index) => (
+                                <React.Fragment key={index}>
+                                    <ListItem sx={{ px: 0 }}>
+                                        <ListItemText
+                                            primary={
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <Box>
+                                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                            {job.title}
+                                                        </Typography>
+                                                        <Typography variant="subtitle2" color="text.secondary">
+                                                            {job.company}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Chip
+                                                        label={`${job.matchPercentage}% Match`}
+                                                        color="primary"
+                                                        size="small"
+                                                        sx={{ 
+                                                            fontWeight: 600,
+                                                            bgcolor: `rgba(25, 118, 210, ${job.matchPercentage / 100})`
+                                                        }}
+                                                    />
+                                                </Box>
+                                            }
+                                            secondary={
+                                                <Box sx={{ width: '100%' }}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {job.location}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {job.postedDate}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                        {job.skills.map((skill, idx) => (
+                                                            <Chip
+                                                                key={idx}
+                                                                label={skill}
+                                                                size="small"
+                                                                sx={{ 
+                                                                    bgcolor: 'background.default',
+                                                                    fontWeight: 500
+                                                                }}
+                                                            />
+                                                        ))}
+                                                    </Box>
+                                                </Box>
+                                            }
+                                        />
+                                    </ListItem>
+                                    {index < jobMatches.length - 1 && <Divider />}
+                                </React.Fragment>
+                            ))}
+                        </List>
+                    </Paper>
+                </Grid>
+            </Grid>
+        </Container>
     );
 };
 

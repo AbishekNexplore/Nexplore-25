@@ -19,6 +19,7 @@ import ChatBot from './pages/Chat/ChatBot';
 import ResumeFeedback from './pages/Resume/ResumeFeedback';
 import CareerTrends from './pages/Analytics/CareerTrends';
 import Profile from './pages/Profile/Profile';
+import LearningPath from './pages/Learning/LearningPath';
 
 // Auth Context
 import { AuthProvider } from './context/AuthContext';
@@ -132,6 +133,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/learning-path"
+            element={
+              <ProtectedRoute>
+                <LearningPath />
               </ProtectedRoute>
             }
           />
