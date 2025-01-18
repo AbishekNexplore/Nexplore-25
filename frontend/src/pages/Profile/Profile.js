@@ -173,23 +173,15 @@ const Profile = () => {
             <Grid item xs={12}>
               <Box sx={{ 
                 display: 'flex', 
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 2
+                justifyContent: 'center',
+                mt: 3
               }}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<ArrowBack />}
-                  onClick={() => navigate('/dashboard')}
-                >
-                  Back to Dashboard
-                </Button>
                 <Button
                   type="submit"
                   variant="contained"
                   color="primary"
                   size="large"
+                  sx={{ minWidth: '200px' }}
                 >
                   Save Changes
                 </Button>
