@@ -53,6 +53,30 @@ function App() {
     }
   }, [dispatch]);
 
+  useEffect(() => {
+    const restoreUserData = () => {
+      try {
+        const userData = localStorage.getItem('userData');
+        const token = localStorage.getItem('token');
+        
+        if (userData && token) {
+          console.log('Restoring user data from storage');
+          dispatch({ 
+            type: 'auth/restoreUser', 
+            payload: { 
+              user: JSON.parse(userData), 
+              token 
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error restoring user data:', error);
+      }
+    };
+
+    restoreUserData();
+  }, [dispatch]);
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
