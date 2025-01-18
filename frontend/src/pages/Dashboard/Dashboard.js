@@ -1,71 +1,318 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Grid,
     Paper,
     Typography,
     Box,
-    Card,
-    CardContent,
-    Button,
-    Avatar,
     List,
     ListItem,
     ListItemIcon,
     ListItemText,
     Chip,
-    IconButton,
     LinearProgress,
     Divider,
     Container,
     CircularProgress,
     useTheme,
-    alpha
+    alpha,
+    Tooltip,
+    Stack,
+    Avatar,
+    Button
 } from '@mui/material';
 import {
     TrendingUp,
     Message,
     Description,
     School,
-    Timeline,
     Star,
-    CheckCircleOutline,
     Business,
-    LocationOn,
     AccessTime,
     CheckCircle,
-    RadioButtonUnchecked,
+    EmojiEmotions,
+    Psychology,
+    Lightbulb,
+    Coffee,
+    LocalCafe,
+    Pets,
+    Lock,
     ArrowForward
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 
+const SkillNode = ({ skill, level = 0 }) => {
+    const theme = useTheme();
+    const isUnlocked = skill.unlocked;
+    
+    return (
+        <Box sx={{ 
+            position: 'relative',
+            '&::before': level > 0 ? {
+                content: '""',
+                position: 'absolute',
+                top: '50%',
+                left: -20,
+                width: 20,
+                height: 2,
+                bgcolor: isUnlocked ? theme.palette.primary.main : alpha(theme.palette.text.disabled, 0.3),
+            } : {}
+        }}>
+            <Tooltip title={
+                <Box>
+                    <Typography variant="subtitle2">{skill.name}</Typography>
+                    <Typography variant="caption" display="block">
+                        Level: {skill.level}/{skill.maxLevel}
+                    </Typography>
+                    {skill.description && (
+                        <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                        {skill.description}
+                    </Typography>
+                    )}
+                </Box>
+            }>
+                <Paper
+                    elevation={isUnlocked ? 2 : 0}
+                    sx={{
+                        p: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 2,
+                        bgcolor: isUnlocked 
+                            ? alpha(theme.palette.primary.main, 0.1)
+                            : alpha(theme.palette.action.disabledBackground, 0.5),
+                        border: '2px solid',
+                        borderColor: isUnlocked 
+                            ? theme.palette.primary.main 
+                            : alpha(theme.palette.text.disabled, 0.3),
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                            transform: 'translateY(-2px)',
+                            bgcolor: isUnlocked 
+                                ? alpha(theme.palette.primary.main, 0.15)
+                                : alpha(theme.palette.action.disabledBackground, 0.6),
+                        }
+                    }}
+                >
+                    {isUnlocked ? (
+                        <Avatar
+                            sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                color: theme.palette.primary.main
+                            }}
+                        >
+                            {skill.icon}
+                        </Avatar>
+                    ) : (
+                        <Avatar
+                            sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: alpha(theme.palette.text.disabled, 0.1),
+                                color: theme.palette.text.disabled
+                            }}
+                        >
+                            <Lock fontSize="small" />
+                        </Avatar>
+                    )}
+                    <Typography
+                        variant="subtitle2"
+                        sx={{
+                            color: isUnlocked ? 'text.primary' : 'text.disabled',
+                            fontWeight: isUnlocked ? 600 : 400
+                        }}
+                    >
+                        {skill.name}
+                    </Typography>
+                    {skill.level > 0 && (
+                        <Chip
+                            label={`Lvl ${skill.level}`}
+                            size="small"
+                            sx={{
+                                ml: 'auto',
+                                bgcolor: isUnlocked 
+                                    ? alpha(theme.palette.primary.main, 0.2)
+                                    : alpha(theme.palette.text.disabled, 0.1),
+                                color: isUnlocked 
+                                    ? theme.palette.primary.main
+                                    : theme.palette.text.disabled,
+                                height: 20,
+                                '& .MuiChip-label': {
+                                    px: 1,
+                                    fontSize: '0.625rem',
+                                    fontWeight: 600
+                                }
+                            }}
+                        />
+                    )}
+                </Paper>
+            </Tooltip>
+            {skill.children?.length > 0 && (
+                <Box sx={{ pl: 4 }}>
+                    {skill.children.map((child, index) => (
+                        <SkillNode key={child.id} skill={child} level={level + 1} />
+                    ))}
+                </Box>
+            )}
+        </Box>
+    );
+};
+
+const CareerCompanion = ({ userName }) => {
+    const theme = useTheme();
+    const [mood, setMood] = useState('happy');
+    const [message, setMessage] = useState('Ready to achieve great things today!');
+    const [energy, setEnergy] = useState(80);
+
+    const moodEmojis = {
+        happy: <EmojiEmotions sx={{ fontSize: 64, color: '#FFD700' }} />,
+        thinking: <Psychology sx={{ fontSize: 64, color: theme.palette.primary.main }} />,
+        inspired: <Lightbulb sx={{ fontSize: 64, color: '#FFA500' }} />,
+        needsCoffee: <Coffee sx={{ fontSize: 64, color: '#8B4513' }} />
+    };
+
+    const getPersonalizedMessage = useCallback((mood) => {
+        const messages = {
+            happy: `Keep up the great work, ${userName}!`,
+            thinking: `Hmm... what should we focus on next, ${userName}?`,
+            inspired: `I have some great ideas for your growth, ${userName}!`,
+            needsCoffee: `Time for a productive break, ${userName}?`
+        };
+        return messages[mood];
+    }, [userName]);
+
+    const updateEnergy = useCallback(() => {
+        // Simulate energy changes based on time of day
+        const hour = new Date().getHours();
+        if (hour < 6) setEnergy(30); // Early morning
+        else if (hour < 12) setEnergy(90); // Morning
+        else if (hour < 15) setEnergy(70); // After lunch
+        else if (hour < 19) setEnergy(60); // Afternoon
+        else setEnergy(40); // Evening
+    }, []);
+
+    useEffect(() => {
+        updateEnergy();
+        const interval = setInterval(updateEnergy, 60000); // Update energy every minute
+        return () => clearInterval(interval);
+    }, [updateEnergy]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const moods = ['happy', 'thinking', 'inspired', 'needsCoffee'];
+            const randomMood = moods[Math.floor(Math.random() * moods.length)];
+            setMood(randomMood);
+            setMessage(getPersonalizedMessage(randomMood));
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, [getPersonalizedMessage]);
+
+    return (
+        <Paper sx={{ 
+            p: 3,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            background: `linear-gradient(45deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.background.paper, 1)} 100%)`
+        }}>
+            <Box sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 4,
+                bgcolor: theme.palette.primary.main,
+                background: `linear-gradient(90deg, ${theme.palette.primary.main} ${energy}%, ${alpha(theme.palette.primary.main, 0.2)} ${energy}%)`
+            }} />
+            
+            <Box sx={{ 
+                mb: 2,
+                animation: mood === 'happy' ? 'bounce 1s infinite' : 'none',
+                '@keyframes bounce': {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-10px)' }
+                }
+            }}>
+                {moodEmojis[mood]}
+            </Box>
+
+            <Typography variant="h6" sx={{ mb: 1, textAlign: 'center', fontWeight: 600 }}>
+                Hi, {userName}! 👋
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" sx={{ 
+                mb: 3,
+                textAlign: 'center',
+                fontStyle: 'italic'
+            }}>
+                {message}
+            </Typography>
+
+            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                <Chip 
+                    icon={<LocalCafe />}
+                    label={`Energy: ${energy}%`}
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                />
+                <Chip 
+                    icon={<Pets />}
+                    label="Level 5"
+                    color="secondary"
+                    variant="outlined"
+                    size="small"
+                />
+            </Stack>
+
+            <Box sx={{ width: '100%', mt: 'auto' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, textAlign: 'center' }}>
+                    Daily Tip
+                </Typography>
+                <Paper sx={{ 
+                    p: 2,
+                    bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    border: `1px dashed ${alpha(theme.palette.primary.main, 0.2)}`
+                }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                        "Take small steps every day. They add up to big achievements!"
+                    </Typography>
+                </Paper>
+            </Box>
+        </Paper>
+    );
+};
+
 const Dashboard = () => {
     const user = useSelector(state => state.auth.user);
     const theme = useTheme();
+    
+    console.log('User data:', user);
 
     if (!user) {
         return (
             <Container 
-                maxWidth="lg" 
                 sx={{ 
-                    mt: { xs: 8, sm: 9 }, 
-                    mb: 4,
-                    pt: 3 
-                }}
-            >
-                <Box sx={{ 
                     display: 'flex', 
                     justifyContent: 'center', 
-                    alignItems: 'center', 
-                    minHeight: '80vh' 
-                }}>
-                    <CircularProgress size={60} />
-                </Box>
+                    alignItems: 'center',
+                    minHeight: '60vh'
+                }}
+            >
+                <CircularProgress />
             </Container>
         );
     }
 
-    // Featured actions with descriptions and progress
     const featuredActions = [
         {
             title: 'Career Trends',
@@ -110,41 +357,6 @@ const Dashboard = () => {
                 hoursLearned: 28,
                 nextMilestone: '5 courses'
             }
-        }
-    ];
-
-    const quickStats = [
-        {
-            title: 'Profile Strength',
-            value: '85%',
-            icon: <CheckCircle color="success" />,
-            trend: '+5%',
-            description: 'Your profile is performing well',
-            color: 'success.main'
-        },
-        {
-            title: 'Skills Matched',
-            value: '24/30',
-            icon: <Star color="warning" />,
-            trend: '+3',
-            description: 'Required skills for your target role',
-            color: 'warning.main'
-        },
-        {
-            title: 'Learning Hours',
-            value: '28h',
-            icon: <Timeline color="info" />,
-            trend: '+2h',
-            description: 'Total learning time this month',
-            color: 'info.main'
-        },
-        {
-            title: 'Achievements',
-            value: '12',
-            icon: <CheckCircleOutline color="primary" />,
-            trend: '+2',
-            description: 'Badges and certifications earned',
-            color: 'primary.main'
         }
     ];
 
@@ -238,7 +450,6 @@ const Dashboard = () => {
 
     return (
         <Container 
-            maxWidth="xl" 
             sx={{ 
                 mt: { xs: 8, sm: 9 }, 
                 mb: 4,
@@ -530,28 +741,29 @@ const Dashboard = () => {
                 ))}
             </Grid>
 
-            {/* Recent Activities Section */}
-            <Typography variant="h5" sx={{ 
-                mb: 3, 
-                fontWeight: 600,
-                color: 'text.primary',
-                position: 'relative',
-                '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: -8,
-                    left: 0,
-                    width: 40,
-                    height: 3,
-                    borderRadius: 1.5,
-                    bgcolor: 'primary.main'
-                }
-            }}>
-                Recent Activities
-            </Typography>
-
+            {/* Recent Activities and Career Tools Section */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12}>
+                <Grid item xs={12} md={6}>
+                    <Typography variant="h5" sx={{ 
+                        mb: 3, 
+                        fontWeight: 700,
+                        color: 'text.primary',
+                        position: 'relative',
+                        pl: 2,
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            width: 4,
+                            height: '60%',
+                            bgcolor: theme.palette.primary.main,
+                            borderRadius: 2
+                        }
+                    }}>
+                        Recent Activities
+                    </Typography>
                     <Paper sx={{ p: 3 }}>
                         <List sx={{ 
                             '& .MuiListItem-root': { 
@@ -605,6 +817,37 @@ const Dashboard = () => {
                             ))}
                         </List>
                     </Paper>
+                </Grid>
+
+                {/* Career Tools Section */}
+                <Grid item xs={12} md={6}>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <Typography variant="h5" sx={{ 
+                                mb: 3, 
+                                fontWeight: 700,
+                                color: 'text.primary',
+                                position: 'relative',
+                                pl: 2,
+                                '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    width: 4,
+                                    height: '60%',
+                                    bgcolor: theme.palette.primary.main,
+                                    borderRadius: 2
+                                }
+                            }}>
+                                Career Tools
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <CareerCompanion userName={user?.name || user?.firstName || 'there'} />
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Grid>
 
