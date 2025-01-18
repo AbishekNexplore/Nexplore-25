@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import {
     AppBar,
     Toolbar,
@@ -12,14 +13,15 @@ import {
     MenuItem,
     Box
 } from '@mui/material';
-import { AccountCircle, Notifications, Dashboard, ExitToApp } from '@mui/icons-material';
+import { AccountCircle, Notifications, Dashboard,} from '@mui/icons-material';
 import { logout } from '../../store/slices/authSlice';
 
 const Navbar = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const theme = useTheme();
     const { user, isAuthenticated } = useSelector((state) => state.auth);
-    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
 
     const handleMenu = (event) => {
         setAnchorEl(event.currentTarget);
@@ -48,24 +50,30 @@ const Navbar = () => {
         <AppBar 
             position="fixed" 
             sx={{ 
-                backgroundColor: 'primary.main',
-                zIndex: (theme) => theme.zIndex.appBar,
+                background: theme.palette.primary.main,
+                zIndex: theme.zIndex.appBar,
                 height: '64px',
+                boxShadow: 1,
                 '& .MuiToolbar-root': {
                     minHeight: '64px',
-                    height: '64px'
+                    height: '64px',
+                    background: theme.palette.primary.main
                 },
                 '& .MuiTypography-root': {
-                    backgroundColor: 'transparent',
-                    position: 'relative',
-                    zIndex: (theme) => theme.zIndex.drawer + 3,
                     color: '#fff',
-                    textShadow: 'none',
-                    mixBlendMode: 'normal'
+                    zIndex: 'auto'
+                },
+                '& .MuiSvgIcon-root': {
+                    color: '#fff',
+                    zIndex: 'auto'
+                },
+                '& .MuiButton-root': {
+                    color: '#fff',
+                    zIndex: 'auto'
                 }
             }}
         >
-            <Toolbar>
+            <Toolbar sx={{ background: theme.palette.primary.main }}>
                 <Box 
                     component="img" 
                     src="/map-svgrepo-com.svg" 
@@ -75,7 +83,7 @@ const Navbar = () => {
                         height: 40,
                         mr: 2,
                         position: 'relative',
-                        zIndex: (theme) => theme.zIndex.drawer + 3
+                        zIndex: theme.zIndex.drawer + 3
                     }}
                 />
                 <Typography 
@@ -86,13 +94,7 @@ const Navbar = () => {
                         fontWeight: 600, 
                         letterSpacing: '.5px',
                         position: 'relative',
-                        zIndex: (theme) => theme.zIndex.drawer + 3,
-                        '&.MuiTypography-root': {
-                            backgroundColor: 'transparent',
-                            color: '#fff',
-                            textShadow: 'none',
-                            mixBlendMode: 'normal'
-                        }
+                        zIndex: theme.zIndex.drawer + 3
                     }}
                 >
                     Career Navigator
@@ -136,7 +138,6 @@ const Navbar = () => {
                                 startIcon={<Dashboard />}
                                 onClick={handleDashboard}
                                 sx={{
-                                    color: 'white',
                                     '&:hover': {
                                         backgroundColor: 'rgba(255, 255, 255, 0.1)'
                                     }

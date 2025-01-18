@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import Navbar from './Navbar';
 
 const Layout = ({ children }) => {
@@ -10,29 +10,21 @@ const Layout = ({ children }) => {
             display: 'flex', 
             flexDirection: 'column', 
             minHeight: '100vh',
-            '& .MuiAppBar-root': {
-                '& .MuiToolbar-root': {
-                    backgroundColor: theme.palette.primary.main,
-                    minHeight: '64px'
-                }
-            }
+            background: theme.palette.background.default,
         }}>
-            <Navbar />
+            <Box sx={{ height: '64px', flexShrink: 0 }}>
+                <Navbar />
+            </Box>
             <Box
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    mt: '64px', // Fixed height for navbar
                     pt: 3,
                     pb: 3,
-                    backgroundColor: theme.palette.background.default,
-                    position: 'relative',
-                    zIndex: 1
+                    background: theme.palette.background.default,
                 }}
             >
-                <Container maxWidth="lg">
-                    {children}
-                </Container>
+                {children}
             </Box>
         </Box>
     );

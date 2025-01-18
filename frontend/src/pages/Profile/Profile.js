@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -11,12 +10,10 @@ import {
   Divider,
   Alert
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfile } from '../../store/slices/authSlice';
 
 const Profile = () => {
-  const navigate = useNavigate();
   const reduxUser = useSelector(state => state.auth.user);
   const dispatch = useDispatch();
   const [message, setMessage] = useState('');
