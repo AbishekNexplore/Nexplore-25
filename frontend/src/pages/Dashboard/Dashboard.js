@@ -841,11 +841,11 @@ const Dashboard = () => {
                                     borderRadius: 2
                                 }
                             }}>
-                                Career Tools
+                                Career Companion Hub
                             </Typography>
                         </Grid>
                         <Grid item xs={12}>
-                            <CareerCompanion userName={user?.name || user?.firstName || 'there'} />
+                            <CareerCompanion userName={user?.name || 'there'} />
                         </Grid>
                     </Grid>
                 </Grid>
