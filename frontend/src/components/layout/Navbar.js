@@ -12,7 +12,7 @@ import {
     MenuItem,
     Box
 } from '@mui/material';
-import { AccountCircle, Notifications } from '@mui/icons-material';
+import { AccountCircle, Notifications, Dashboard, ExitToApp } from '@mui/icons-material';
 import { logout } from '../../store/slices/authSlice';
 
 const Navbar = () => {
@@ -40,15 +40,61 @@ const Navbar = () => {
         handleClose();
     };
 
+    const handleDashboard = () => {
+        navigate('/dashboard');
+    };
+
     return (
-        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <AppBar 
+            position="fixed" 
+            sx={{ 
+                backgroundColor: 'primary.main',
+                zIndex: (theme) => theme.zIndex.appBar,
+                height: '64px',
+                '& .MuiToolbar-root': {
+                    minHeight: '64px',
+                    height: '64px'
+                },
+                '& .MuiTypography-root': {
+                    backgroundColor: 'transparent',
+                    position: 'relative',
+                    zIndex: (theme) => theme.zIndex.drawer + 3,
+                    color: '#fff',
+                    textShadow: 'none',
+                    mixBlendMode: 'normal'
+                }
+            }}
+        >
             <Toolbar>
-                <Box component="img" 
-                     src="/map-svgrepo-com.svg" 
-                     alt="Logo"
-                     sx={{ height: 40, width: 40, mr: 2 }}
+                <Box 
+                    component="img" 
+                    src="/map-svgrepo-com.svg" 
+                    alt="Logo"
+                    sx={{
+                        width: 40,
+                        height: 40,
+                        mr: 2,
+                        position: 'relative',
+                        zIndex: (theme) => theme.zIndex.drawer + 3
+                    }}
                 />
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                <Typography 
+                    variant="h6" 
+                    component="div" 
+                    sx={{ 
+                        flexGrow: 1, 
+                        fontWeight: 600, 
+                        letterSpacing: '.5px',
+                        position: 'relative',
+                        zIndex: (theme) => theme.zIndex.drawer + 3,
+                        '&.MuiTypography-root': {
+                            backgroundColor: 'transparent',
+                            color: '#fff',
+                            textShadow: 'none',
+                            mixBlendMode: 'normal'
+                        }
+                    }}
+                >
                     Career Navigator
                 </Typography>
 
@@ -84,6 +130,21 @@ const Navbar = () => {
                             <MenuItem onClick={handleProfile}>Profile</MenuItem>
                             <MenuItem onClick={handleLogout}>Logout</MenuItem>
                         </Menu>
+                        <Box sx={{ display: 'flex', gap: 2, ml: 2 }}>
+                            <Button
+                                color="inherit"
+                                startIcon={<Dashboard />}
+                                onClick={handleDashboard}
+                                sx={{
+                                    color: 'white',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                }}
+                            >
+                                Dashboard
+                            </Button>
+                        </Box>
                     </Box>
                 ) : (
                     <Box>
