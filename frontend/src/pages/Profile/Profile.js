@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -10,20 +11,39 @@ import {
   Divider,
   Alert
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
+import { ArrowBack } from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateProfile } from '../../store/slices/authSlice';
 
 const Profile = () => {
-  const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
+  const reduxUser = useSelector(state => state.auth.user);
+  const dispatch = useDispatch();
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    currentRole: user?.currentRole || '',
-    desiredRole: user?.desiredRole || '',
-    skills: user?.skills?.join(', ') || '',
-    experience: user?.experience || ''
+    name: '',
+    email: '',
+    currentRole: '',
+    desiredRole: '',
+    skills: '',
+    experience: ''
   });
+
+  // Initialize form data from Redux state
+  useEffect(() => {
+    if (reduxUser) {
+      console.log('Setting form data from Redux user:', reduxUser);
+      setFormData({
+        name: reduxUser.name || '',
+        email: reduxUser.email || '',
+        currentRole: reduxUser.currentRole || '',
+        desiredRole: reduxUser.desiredRole || '',
+        skills: Array.isArray(reduxUser.skills) ? reduxUser.skills.join(', ') : (reduxUser.skills || ''),
+        experience: reduxUser.experience || ''
+      });
+    }
+  }, [reduxUser]);
 
   const handleChange = (e) => {
     setFormData({
@@ -35,35 +55,43 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Convert skills string to array
+      console.log('Submitting form data:', formData);
+      // Convert skills string to array and ensure name is properly set
       const updatedData = {
         ...formData,
-        skills: formData.skills.split(',').map(skill => skill.trim())
+        name: formData.name.trim(),
+        skills: formData.skills.split(',').map(skill => skill.trim()).filter(Boolean)
       };
 
-      // Update user profile
-      await updateUser(updatedData);
+      console.log('Sending updated data to server:', updatedData);
+      // Update user profile in Redux
+      const result = await dispatch(updateProfile(updatedData)).unwrap();
+      console.log('Profile update result:', result);
+      
+      // If successful, show success message
       setMessage('Profile updated successfully!');
       setError('');
     } catch (err) {
+      console.error('Profile update error:', err);
       setError(err.message || 'Failed to update profile');
       setMessage('');
     }
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom>
           Profile Settings
         </Typography>
         <Divider sx={{ mb: 4 }} />
-
+        
         {message && (
           <Alert severity="success" sx={{ mb: 2 }}>
             {message}
           </Alert>
         )}
+        
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -74,23 +102,23 @@ const Profile = () => {
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <TextField
+                required
                 fullWidth
                 label="Name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                variant="outlined"
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                required
                 fullWidth
                 label="Email"
                 name="email"
+                type="email"
                 value={formData.email}
                 onChange={handleChange}
-                variant="outlined"
-                disabled
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -100,7 +128,6 @@ const Profile = () => {
                 name="currentRole"
                 value={formData.currentRole}
                 onChange={handleChange}
-                variant="outlined"
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -110,7 +137,6 @@ const Profile = () => {
                 name="desiredRole"
                 value={formData.desiredRole}
                 onChange={handleChange}
-                variant="outlined"
               />
             </Grid>
             <Grid item xs={12}>
@@ -120,10 +146,7 @@ const Profile = () => {
                 name="skills"
                 value={formData.skills}
                 onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={2}
-                helperText="Enter your skills separated by commas (e.g., JavaScript, React, Node.js)"
+                helperText="Enter your skills separated by commas"
               />
             </Grid>
             <Grid item xs={12}>
@@ -131,16 +154,27 @@ const Profile = () => {
                 fullWidth
                 label="Experience"
                 name="experience"
+                multiline
+                rows={4}
                 value={formData.experience}
                 onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={3}
-                helperText="Briefly describe your work experience"
               />
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 2
+              }}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<ArrowBack />}
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Back to Dashboard
+                </Button>
                 <Button
                   type="submit"
                   variant="contained"
