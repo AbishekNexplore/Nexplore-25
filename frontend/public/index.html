@@ -4,17 +4,74 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="AI-powered career guidance web application"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="AI-powered career navigation and guidance platform" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="career guidance, AI career advisor, job recommendations, skill analysis, professional development, career path, learning path" />
+    <meta name="author" content="AI Career Navigator" />
+    <meta property="og:title" content="AI Career Navigator - Your AI-Powered Career Guide" />
+    <meta property="og:description" content="Get personalized career guidance, skill recommendations, and professional development insights powered by AI." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AI Career Navigator" />
+    <meta name="twitter:description" content="Your AI-Powered Career Guide" />
+    
+    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/map-svgrepo-com.svg" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Career Guidance Platform</title>
+    <title>AI Career Navigator</title>
+    <style>
+      #root-loader {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: #ffffff;
+        transition: opacity 0.3s;
+      }
+      .loader {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #2563eb;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        animation: rotation 1s linear infinite;
+      }
+      @keyframes rotation {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .fade-out {
+        opacity: 0;
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <div id="root-loader">
+      <div class="loader"></div>
+    </div>
+    <script>
+      window.addEventListener('load', function() {
+        const app = document.getElementById('root');
+        const loader = document.getElementById('root-loader');
+        
+        // Remove loader when app content is ready
+        const observer = new MutationObserver(function(mutations) {
+          if (app.children.length > 0) {
+            loader.classList.add('fade-out');
+            setTimeout(() => loader.remove(), 300);
+            observer.disconnect();
+          }
+        });
+        
+        observer.observe(app, { childList: true });
+      });
+    </script>
   </body>
 </html>
