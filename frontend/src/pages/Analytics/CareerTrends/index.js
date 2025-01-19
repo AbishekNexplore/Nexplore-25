@@ -12,7 +12,6 @@ import {
   Select,
   MenuItem,
   TextField,
-  Slider,
   Paper,
   InputAdornment,
   Button,
@@ -26,8 +25,6 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup, Sphere, Graticule
 import { scaleSequential } from 'd3-scale';
 import { interpolateBlues } from 'd3-scale-chromatic';
 import { Network, DataSet } from 'vis-network/standalone';
-import { schemeRdYlBu } from 'd3-scale-chromatic';
-import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
@@ -102,24 +99,16 @@ const CareerTrends = () => {
   const networkInstanceRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedIndustry, setSelectedIndustry] = useState('All');
-  const [selectedRole, setSelectedRole] = useState('All');
   const [selectedExperience, setSelectedExperience] = useState('All');
-  const [yearFilter, setYearFilter] = useState(2023);
   const [searchSkill, setSearchSkill] = useState('');
-  const [searchInput, setSearchInput] = useState('');
   const [selectedCluster, setSelectedCluster] = useState('All');
-  const [selectedMetric, setSelectedMetric] = useState('jobAvailability');
-  const [selectedRegion, setSelectedRegion] = useState(null);
   const [data, setData] = useState({
     salaryTrends: [],
     skillConnections: { nodes: [], edges: [] },
     regionData: {},
     techTrends: []
   });
-
-  const searchTimeoutRef = useRef(null);
-
+  
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -513,34 +502,24 @@ const CareerTrends = () => {
     }
   }, [data.skillConnections, searchSkill, selectedCluster, theme]);
 
-  const Legend = () => (
-    <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
-      {['Frontend', 'Backend', 'Database', 'DevOps', 'Cloud'].map((category) => (
-        <Box
-          key={category}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            bgcolor: theme.palette.background.paper,
-            p: 1,
-            borderRadius: 1,
-            boxShadow: 1
-          }}
-        >
-          <Box
-            sx={{
-              width: 12,
-              height: 12,
-              borderRadius: '50%',
-              bgcolor: selectedCluster === category ? theme.palette.primary.light : theme.palette.primary.main
-            }}
-          />
-          <Typography variant="caption">
-            {category}
-          </Typography>
-        </Box>
-      ))}
+  const handleClusterChange = (event) => {
+    event.preventDefault();
+    setSelectedCluster(event.target.value);
+  };
+
+  const LoadingState = () => (
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      height: '80vh',
+      gap: 2
+    }}>
+      <CircularProgress />
+      <Typography variant="body2" color="text.secondary">
+        Loading career insights...
+      </Typography>
     </Box>
   );
 
@@ -560,22 +539,6 @@ const CareerTrends = () => {
     >
       {message}
     </Alert>
-  );
-
-  const LoadingState = () => (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      height: '80vh',
-      gap: 2
-    }}>
-      <CircularProgress />
-      <Typography variant="body2" color="text.secondary">
-        Loading career insights...
-      </Typography>
-    </Box>
   );
 
   const RegionalJobMarket = () => {
@@ -601,7 +564,7 @@ const CareerTrends = () => {
         .domain([0, maxValue])
         .interpolator(interpolateBlues);
       return colorScale(value);
-    }, [data.regionData, selectedMetric]);
+    }, [selectedMetric]);
 
     const metrics = {
       jobCount: "Job Openings",
@@ -766,13 +729,6 @@ const CareerTrends = () => {
       </Box>
     );
   };
-
-  // Prevent form submission
-  const preventFormSubmit = useCallback((e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-    }
-  }, []);
 
   const filteredSalaryData = selectedExperience === 'All' 
     ? [
@@ -1195,7 +1151,7 @@ const CareerTrends = () => {
                     <Select
                       value={selectedCluster}
                       label="Filter by Category"
-                      onChange={(e) => setSelectedCluster(e.target.value)}
+                      onChange={handleClusterChange}
                     >
                       <MenuItem value="All">All Categories</MenuItem>
                       <MenuItem value="Frontend">Frontend</MenuItem>
@@ -1225,7 +1181,6 @@ const CareerTrends = () => {
                 }
               }} 
             />
-            <Legend />
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 Double-click a node to focus on its skill category. Use the search bar to highlight specific skills.
@@ -1236,6 +1191,7 @@ const CareerTrends = () => {
         </Card>
 
         <RegionalJobMarket />
+
       </Box>
     </Container>
   );
