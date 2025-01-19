@@ -24,7 +24,9 @@ router.post('/start', auth, async (req, res) => {
 // Send message in chat
 router.post('/:chatId/message', auth, async (req, res) => {
     try {
-        const { message } = req.body;
+        const { content } = req.body;
+        console.log('Received message request:', { chatId: req.params.chatId, content });
+        
         const chat = await Chat.findOne({
             _id: req.params.chatId,
             userId: req.user._id
@@ -36,24 +38,30 @@ router.post('/:chatId/message', auth, async (req, res) => {
 
         // Add user message to chat
         chat.messages.push({
-            content: message,
+            content,
             role: 'user'
         });
 
-        // Get response from chatbot
-        const botResponse = await chatbot.processMessage(message);
+        try {
+            // Get response from chatbot
+            const botResponse = await chatbot.processMessage(content);
+            console.log('Bot response:', botResponse);
 
-        // Add bot response to chat
-        chat.messages.push({
-            content: botResponse,
-            role: 'assistant'
-        });
+            // Add bot response to chat
+            chat.messages.push({
+                content: botResponse,
+                role: 'assistant'
+            });
 
-        await chat.save();
-        res.json({ response: botResponse });
+            await chat.save();
+            res.json({ response: botResponse });
+        } catch (error) {
+            console.error('Error getting bot response:', error);
+            res.status(500).json({ error: 'Failed to get bot response', details: error.message });
+        }
     } catch (error) {
         console.error('Error processing message:', error);
-        res.status(500).json({ error: 'Failed to process message' });
+        res.status(500).json({ error: 'Failed to process message', details: error.message });
     }
 });
 

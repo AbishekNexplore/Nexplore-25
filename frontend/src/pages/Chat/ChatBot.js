@@ -12,14 +12,20 @@ import { startNewChat, sendMessage } from '../../store/slices/chatSlice';
 
 const ChatBot = () => {
     const dispatch = useDispatch();
-    const currentChat = useSelector((state) => state.chat.currentChat);
-    const { messages, loading } = useSelector((state) => state.chat);
     const [input, setInput] = useState('');
     const messagesEndRef = useRef(null);
+    const currentChat = useSelector(state => state.chat.currentChat);
+    const [messages, setMessages] = useState([]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+
+    useEffect(() => {
+        if (currentChat?.messages) {
+            setMessages(currentChat.messages);
+        }
+    }, [currentChat]);
 
     useEffect(() => {
         scrollToBottom();
@@ -31,22 +37,40 @@ const ChatBot = () => {
         
         if (messageText) {
             try {
-                if (!currentChat) {
+                let activeChatId = currentChat?._id;
+
+                // Add user message immediately to UI
+                setMessages(prev => [...prev, { content: messageText, role: 'user' }]);
+                setInput('');
+
+                if (!activeChatId) {
+                    // Start a new chat if we don't have one
                     const result = await dispatch(startNewChat()).unwrap();
                     if (!result) {
                         console.error('Failed to start new chat');
                         return;
                     }
+                    activeChatId = result._id;
                 }
-                
-                await dispatch(sendMessage({ 
+
+                // Send message to backend
+                const response = await dispatch(sendMessage({ 
                     content: messageText, 
-                    chatId: currentChat.id 
-                }));
-                
-                setInput('');
+                    chatId: activeChatId
+                })).unwrap();
+
+                // Add bot response to UI
+                if (response && response.response) {
+                    setMessages(prev => [...prev, { content: response.response, role: 'assistant' }]);
+                }
             } catch (error) {
                 console.error('Error sending message:', error);
+                // Add error message to UI
+                setMessages(prev => [...prev, { 
+                    content: "Sorry, I encountered an error. Please try again.", 
+                    role: 'assistant',
+                    isError: true 
+                }]);
             }
         }
     };
@@ -68,46 +92,37 @@ const ChatBot = () => {
                                     style={{
                                         padding: '10px 20px',
                                         maxWidth: '70%',
-                                        backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f5f5f5',
-                                        borderRadius: msg.role === 'user' ? '20px 20px 0 20px' : '20px 20px 20px 0'
+                                        backgroundColor: msg.role === 'user' ? '#e3f2fd' : msg.isError ? '#ffcccc' : '#f5f5f5',
+                                        borderRadius: '15px'
                                     }}
                                 >
-                                    <Typography variant="body1">{msg.content}</Typography>
+                                    <Typography>{msg.content}</Typography>
                                 </Paper>
                             </Box>
                         ))}
                         <div ref={messagesEndRef} />
                     </Paper>
                 </Grid>
-                <Grid item xs={12}>
-                    <Paper elevation={3} style={{ padding: '20px', marginTop: '20px' }}>
-                        <form onSubmit={handleSend}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={11}>
-                                    <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        placeholder="Type your message..."
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        disabled={loading}
-                                    />
-                                </Grid>
-                                <Grid item xs={1}>
-                                    <Button
-                                        fullWidth
-                                        variant="contained"
-                                        color="primary"
-                                        type="submit"
-                                        disabled={loading || !input.trim()}
-                                        style={{ height: '100%' }}
-                                    >
-                                        Send
-                                    </Button>
-                                </Grid>
-                            </Grid>
+                <Grid item>
+                    <Box mt={2}>
+                        <form onSubmit={handleSend} style={{ display: 'flex', gap: '10px' }}>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                placeholder="Type your message..."
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                            />
+                            <Button 
+                                type="submit" 
+                                variant="contained" 
+                                color="primary"
+                                disabled={!input.trim()}
+                            >
+                                Send
+                            </Button>
                         </form>
-                    </Paper>
+                    </Box>
                 </Grid>
             </Grid>
         </Box>
