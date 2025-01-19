@@ -50,25 +50,25 @@ const Navbar = () => {
         <AppBar 
             position="fixed" 
             sx={{ 
-                background: theme.palette.primary.main,
-                zIndex: theme.zIndex.drawer + 1,
+                zIndex: theme => theme.zIndex.drawer + 1,
+                bgcolor: theme.palette.mode === 'dark' ? '#1a1b26' : '#f0f4f8',
+                borderBottom: 1,
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
                 height: '64px',
-                boxShadow: 1,
                 '& .MuiToolbar-root': {
                     minHeight: '64px',
                     height: '64px',
-                    background: theme.palette.primary.main,
                     position: 'relative',
                     zIndex: 'inherit'
                 },
                 '& .MuiTypography-root': {
-                    color: '#fff'
+                    color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
                 },
                 '& .MuiSvgIcon-root': {
-                    color: '#fff'
+                    color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
                 },
                 '& .MuiButton-root': {
-                    color: '#fff'
+                    color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
                 }
             }}
         >

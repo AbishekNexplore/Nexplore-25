@@ -54,7 +54,18 @@ router.post('/:chatId/message', auth, async (req, res) => {
             });
 
             await chat.save();
-            res.json({ response: botResponse });
+            
+            // Return both messages in the response
+            res.json({
+                userMessage: {
+                    content,
+                    role: 'user'
+                },
+                aiResponse: {
+                    content: botResponse,
+                    role: 'assistant'
+                }
+            });
         } catch (error) {
             console.error('Error getting bot response:', error);
             res.status(500).json({ error: 'Failed to get bot response', details: error.message });

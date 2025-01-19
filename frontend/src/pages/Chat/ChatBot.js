@@ -1,130 +1,328 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     Box,
-    Grid,
-    Paper,
-    TextField,
     Typography,
-    Button
+    TextField,
+    IconButton,
+    Avatar,
+    CircularProgress
 } from '@mui/material';
-import { startNewChat, sendMessage } from '../../store/slices/chatSlice';
+import { useTheme } from '@mui/material/styles';
+import SendIcon from '@mui/icons-material/Send';
+import AddIcon from '@mui/icons-material/Add';
+import { sendMessage, startNewChat } from '../../store/slices/chatSlice';
+import { ReactComponent as MapLogo } from '../../assets/map-svgrepo-com.svg';
+import { ReactComponent as UserAvatar } from '../../assets/avatar-boy-svgrepo-com.svg';
+import Navbar from '../../components/layout/Navbar';
 
 const ChatBot = () => {
+    const theme = useTheme();
     const dispatch = useDispatch();
-    const [input, setInput] = useState('');
-    const messagesEndRef = useRef(null);
+    const rawMessages = useSelector(state => state.chat.messages);
+    const messages = useMemo(() => rawMessages || [], [rawMessages]);
     const currentChat = useSelector(state => state.chat.currentChat);
-    const [messages, setMessages] = useState([]);
+    const [userInput, setUserInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const messagesEndRef = useRef(null);
+
+    const handleNewChat = () => {
+        dispatch(startNewChat());
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     useEffect(() => {
-        if (currentChat?.messages) {
-            setMessages(currentChat.messages);
-        }
-    }, [currentChat]);
-
-    useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = async (e) => {
+    useEffect(() => {
+        if (!currentChat) {
+            dispatch(startNewChat());
+        }
+    }, [dispatch, currentChat]);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const messageText = input.trim();
-        
-        if (messageText) {
-            try {
-                let activeChatId = currentChat?._id;
+        if (!userInput.trim() || isLoading) return;
 
-                // Add user message immediately to UI
-                setMessages(prev => [...prev, { content: messageText, role: 'user' }]);
-                setInput('');
+        const messageContent = userInput;
+        setUserInput('');
+        setIsLoading(true);
 
-                if (!activeChatId) {
-                    // Start a new chat if we don't have one
-                    const result = await dispatch(startNewChat()).unwrap();
-                    if (!result) {
-                        console.error('Failed to start new chat');
-                        return;
-                    }
-                    activeChatId = result._id;
+        try {
+            if (!currentChat) {
+                const newChatAction = await dispatch(startNewChat()).unwrap();
+                if (newChatAction) {
+                    const response = await dispatch(sendMessage({ 
+                        content: messageContent,
+                        chatId: newChatAction._id 
+                    })).unwrap();
+                    console.log('Message response in component:', response);
                 }
-
-                // Send message to backend
+            } else {
                 const response = await dispatch(sendMessage({ 
-                    content: messageText, 
-                    chatId: activeChatId
+                    content: messageContent,
+                    chatId: currentChat._id 
                 })).unwrap();
-
-                // Add bot response to UI
-                if (response && response.response) {
-                    setMessages(prev => [...prev, { content: response.response, role: 'assistant' }]);
-                }
-            } catch (error) {
-                console.error('Error sending message:', error);
-                // Add error message to UI
-                setMessages(prev => [...prev, { 
-                    content: "Sorry, I encountered an error. Please try again.", 
-                    role: 'assistant',
-                    isError: true 
-                }]);
+                console.log('Message response in component:', response);
             }
+        } catch (error) {
+            console.error('Error sending message:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    return (
-        <Box p={3} bgcolor="background.default" style={{ height: '100vh' }}>
-            <Grid container direction="column" style={{ height: '100%' }}>
-                <Grid item xs={12} style={{ flexGrow: 1, overflow: 'auto' }}>
-                    <Paper elevation={3} style={{ height: '100%', overflow: 'auto', padding: '20px' }}>
-                        {messages.map((msg, index) => (
-                            <Box
-                                key={index}
-                                mb={2}
-                                display="flex"
-                                justifyContent={msg.role === 'user' ? 'flex-end' : 'flex-start'}
+    const renderMessages = () => {
+        if (!Array.isArray(messages)) return null;
+        
+        return messages.map((msg, index) => {
+            if (!msg || !msg.role || !msg.content) return null;
+            
+            return (
+                <Box
+                    key={index}
+                    sx={{
+                        display: 'flex',
+                        gap: 2,
+                        p: 2,
+                        bgcolor: msg.role === 'assistant'
+                            ? theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc'
+                            : 'transparent',
+                        width: '100%',
+                        borderRadius: 2,
+                        mb: 2
+                    }}
+                >
+                    <Avatar
+                        sx={{
+                            width: 48,
+                            height: 48,
+                            bgcolor: 'transparent'
+                        }}
+                    >
+                        {msg.role === 'assistant' ? (
+                            <Box 
+                                component="div" 
+                                sx={{ 
+                                    width: 40, 
+                                    height: 40,
+                                    '& svg': {
+                                        width: '100%',
+                                        height: '100%',
+                                        fill: 'currentColor',
+                                        color: theme.palette.mode === 'dark' ? '#7aa2f7' : '#2563eb'
+                                    }
+                                }}
                             >
-                                <Paper
-                                    elevation={1}
-                                    style={{
-                                        padding: '10px 20px',
-                                        maxWidth: '70%',
-                                        backgroundColor: msg.role === 'user' ? '#e3f2fd' : msg.isError ? '#ffcccc' : '#f5f5f5',
-                                        borderRadius: '15px'
+                                <MapLogo />
+                            </Box>
+                        ) : (
+                            <Box 
+                                component="div" 
+                                sx={{ 
+                                    width: 32, 
+                                    height: 32,
+                                    '& svg': {
+                                        width: '100%',
+                                        height: '100%',
+                                        fill: 'currentColor',
+                                        color: theme.palette.mode === 'dark' ? '#9ece6a' : '#059669'
+                                    }
+                                }}
+                            >
+                                <UserAvatar />
+                            </Box>
+                        )}
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1 }}>
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word'
+                            }}
+                        >
+                            {msg.content}
+                        </Typography>
+                    </Box>
+                </Box>
+            );
+        });
+    };
+
+    return (
+        <Box sx={{ 
+            display: 'flex',
+            bgcolor: theme.palette.mode === 'dark' ? '#1a1b26' : '#f0f4f8', 
+            height: '100%' 
+        }}>
+            <Navbar />
+            {/* Main Chat Area */}
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    p: 0,
+                    width: '100%',
+                    height: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    pt: '64px'
+                }}
+            >
+                {/* Messages Container */}
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        overflow: 'auto',
+                        p: 2,
+                        width: '100%',
+                        '&::-webkit-scrollbar': {
+                            width: '8px',
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            background: theme.palette.mode === 'dark' ? '#1a1b26' : '#f1f5f9'
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            background: theme.palette.mode === 'dark' ? '#24283b' : '#cbd5e1',
+                            borderRadius: '4px',
+                        },
+                        '&::-webkit-scrollbar-thumb:hover': {
+                            background: theme.palette.mode === 'dark' ? '#414868' : '#94a3b8'
+                        }
+                    }}
+                >
+                    {renderMessages()}
+                    {isLoading && (
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 2,
+                                p: 2,
+                                bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc',
+                                width: '100%',
+                                borderRadius: 2,
+                                mb: 2
+                            }}
+                        >
+                            <Avatar
+                                sx={{
+                                    width: 48,
+                                    height: 48,
+                                    bgcolor: 'transparent'
+                                }}
+                            >
+                                <Box 
+                                    component="div" 
+                                    sx={{ 
+                                        width: 40, 
+                                        height: 40,
+                                        '& svg': {
+                                            width: '100%',
+                                            height: '100%',
+                                            fill: 'currentColor',
+                                            color: theme.palette.mode === 'dark' ? '#7aa2f7' : '#2563eb'
+                                        }
                                     }}
                                 >
-                                    <Typography>{msg.content}</Typography>
-                                </Paper>
+                                    <MapLogo />
+                                </Box>
+                            </Avatar>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center',
+                                color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155'
+                            }}>
+                                <CircularProgress size={20} thickness={4} sx={{ mr: 2 }} />
+                                Thinking...
                             </Box>
-                        ))}
-                        <div ref={messagesEndRef} />
-                    </Paper>
-                </Grid>
-                <Grid item>
-                    <Box mt={2}>
-                        <form onSubmit={handleSend} style={{ display: 'flex', gap: '10px' }}>
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                placeholder="Type your message..."
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                            />
-                            <Button 
-                                type="submit" 
-                                variant="contained" 
-                                color="primary"
-                                disabled={!input.trim()}
-                            >
-                                Send
-                            </Button>
-                        </form>
+                        </Box>
+                    )}
+                    <div ref={messagesEndRef} />
+                </Box>
+
+                {/* Input Container */}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        gap: 2,
+                        p: 2,
+                        bgcolor: theme.palette.mode === 'dark' ? '#1a1b26' : '#ffffff',
+                        borderTop: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
+                    }}
+                >
+                    <IconButton
+                        onClick={handleNewChat}
+                        sx={{
+                            color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155',
+                            '&:hover': {
+                                bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc'
+                            }
+                        }}
+                    >
+                        <AddIcon />
+                    </IconButton>
+                    <Box
+                        component="form"
+                        onSubmit={handleSubmit}
+                        sx={{
+                            display: 'flex',
+                            gap: 1,
+                            flexGrow: 1,
+                        }}
+                    >
+                        <TextField
+                            fullWidth
+                            value={userInput}
+                            onChange={(e) => setUserInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit(e);
+                                }
+                            }}
+                            placeholder="Type your message here..."
+                            multiline
+                            maxRows={5}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#ffffff',
+                                    '& fieldset': {
+                                        borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                                    },
+                                    '& textarea': {
+                                        color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
+                                    }
+                                },
+                            }}
+                            InputProps={{
+                                endAdornment: (
+                                    <IconButton 
+                                        type="submit"
+                                        disabled={!userInput.trim() || isLoading}
+                                        sx={{ 
+                                            color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155',
+                                            '&:hover': {
+                                                bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc'
+                                            }
+                                        }}
+                                    >
+                                        <SendIcon />
+                                    </IconButton>
+                                ),
+                            }}
+                        />
                     </Box>
-                </Grid>
-            </Grid>
+                </Box>
+            </Box>
         </Box>
     );
 };

@@ -329,7 +329,7 @@ Instructions:
                     data: {
                         inputs: `<s>[INST] ${detailedPrompt} [/INST]`,
                         parameters: {
-                            max_new_tokens: 512,
+                            max_new_tokens: 1024,
                             temperature: 0.7,
                             top_p: 0.95,
                             return_full_text: false,
@@ -403,8 +403,8 @@ ${career.certifications.map(cert => `• ${cert}`).join('\n')}
             .slice(1)
             .map(line => line.trim())
             .filter(line => line.length > 0)
-            .map(line => '• ' + line.replace(/^[•\s]*/, ''))
-            .join('\n\n');
+            .map(line => '• ' + line.replace(/^[•\s]*|\*\*/g, '').trim())  // Remove ** and extra spaces
+            .join('\n');
             
         // Add extra newlines for better spacing
         let formatted = 
@@ -414,7 +414,7 @@ ${intro}
 
 ━━━━━━━━━━━━━━━━
 
-`;
+`;  // Add extra newline before first section
         
         // Process each numbered section
         sections = sections.map(section => {
@@ -438,22 +438,23 @@ ${intro}
                                         .replace(/:\s*$/, '')
                                         .replace(/ing:\s*/i, '');
                     formattedSection.push(`${sectionNum}. ${sectionEmoji} ${headerText}`);
-                    formattedSection.push(''); // Add empty line after header
                 } else if (line.toLowerCase().includes('reason')) {
-                    formattedSection.push('→ Reason:');
-                    formattedSection.push('   ' + line.replace(/^[•→\s]*reason(?:ing)?:?\s*/i, ''));
-                    formattedSection.push(''); // Add empty line after reason
+                    formattedSection.push('\n→ Reason:');
+                    formattedSection.push('   ' + line.replace(/^[•→\s]*(?:reason(?:ing)?:?\s*)?s?:?\s*/i, ''));
                 } else if (line.toLowerCase().includes('learning resources')) {
-                    formattedSection.push('→ Learning Resources:');
-                    formattedSection.push('   ' + line.replace(/^[•→\s]*learning resources:?\s*/i, ''));
-                    formattedSection.push(''); // Add empty line after resources
-                } else if (line.toLowerCase().includes('timeline')) {
-                    formattedSection.push('→ Timeline:');
-                    formattedSection.push('   ' + line.replace(/^[•→\s]*(?:estimated\s+)?timeline:?\s*/i, ''));
-                    formattedSection.push(''); // Add empty line after timeline
-                } else {
+                    formattedSection.push('\n→ Learning Resources:');
+                    const resources = line.replace(/^[•→\s]*learning resources:?\s*/i, '')
+                                       .split(',')
+                                       .map(r => r.trim())
+                                       .filter(r => r)
+                                       .map(r => '   • ' + r)
+                                       .join('\n');
+                    formattedSection.push(resources);
+                } else if (line.toLowerCase().includes('timeline') || line.toLowerCase().includes('estimated time')) {
+                    formattedSection.push('\n→ Timeline:');
+                    formattedSection.push('   ' + line.replace(/^[•→\s]*(?:estimated\s+)?time(?:line)?:?\s*/i, ''));
+                } else if (line.trim()) {
                     formattedSection.push('   ' + line.replace(/^[•→\s]*/, ''));
-                    formattedSection.push(''); // Add empty line after content
                 }
             });
             
@@ -465,11 +466,14 @@ ${intro}
         
         // Final cleanup
         return result
-            .replace(/\n{4,}/g, '\n\n\n')  // Max 3 consecutive newlines
+            .replace(/\n{4,}/g, '\n\n')  // Max 2 consecutive newlines
             .replace(/ing:\s+/g, ': ')  // Fix "Reasoning:" to "Reason:"
             .replace(/\s+d\s+/g, ' ')  // Remove single 'd' artifacts
             .replace(/([A-Z])/g, l => l.toLowerCase())  // Convert to lowercase
             .replace(/(?:^|\n)([^→\s•].)/g, (_, c) => (_ === '\n' ? '\n' : '') + c.toUpperCase())  // Capitalize first letter of sentences
+            .replace(/\s+$/gm, '')  // Remove trailing spaces
+            .replace(/([0-9]+\.) ?([💻🔧🗄️🔍🌐])/, '$1 $2')  // Ensure space after section numbers
+            .replace(/\b[A-Z]*([a-z])/g, m => m.toLowerCase())  // Fix mid-word capitals
             .trim();
     }
 
