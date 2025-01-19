@@ -4,11 +4,9 @@ import {
   Container,
   Box,
   Typography,
+  Grid,
   Card,
   CardContent,
-  Grid,
-  CircularProgress,
-  Alert,
   FormControl,
   InputLabel,
   Select,
@@ -18,16 +16,21 @@ import {
   Paper,
   InputAdornment,
   Button,
-  IconButton
+  IconButton,
+  Stack,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, ZoomableGroup, Sphere, Graticule } from 'react-simple-maps';
+import { scaleSequential } from 'd3-scale';
+import { interpolateBlues } from 'd3-scale-chromatic';
 import { Network, DataSet } from 'vis-network/standalone';
 import { schemeRdYlBu } from 'd3-scale-chromatic';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 
-const geoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
+const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 const SearchBox = memo(({ onSearch }) => {
   const [value, setValue] = useState('');
@@ -111,7 +114,7 @@ const CareerTrends = () => {
   const [data, setData] = useState({
     salaryTrends: [],
     skillConnections: { nodes: [], edges: [] },
-    regionData: [],
+    regionData: {},
     techTrends: []
   });
 
@@ -139,53 +142,80 @@ const CareerTrends = () => {
           ],
           skillConnections: {
             nodes: [
-              { id: 1, label: 'JavaScript', category: 'Frontend', value: 85 },
-              { id: 2, label: 'React', category: 'Frontend', value: 80 },
-              { id: 3, label: 'TypeScript', category: 'Frontend', value: 75 },
-              { id: 4, label: 'HTML/CSS', category: 'Frontend', value: 90 },
-              { id: 5, label: 'Node.js', category: 'Backend', value: 78 },
-              { id: 6, label: 'Python', category: 'Backend', value: 82 },
-              { id: 7, label: 'Java', category: 'Backend', value: 75 },
-              { id: 8, label: 'SQL', category: 'Database', value: 85 },
-              { id: 9, label: 'MongoDB', category: 'Database', value: 70 },
-              { id: 10, label: 'PostgreSQL', category: 'Database', value: 72 },
-              { id: 11, label: 'Docker', category: 'DevOps', value: 68 },
-              { id: 12, label: 'Kubernetes', category: 'DevOps', value: 65 },
-              { id: 13, label: 'Jenkins', category: 'DevOps', value: 60 },
-              { id: 14, label: 'AWS', category: 'Cloud', value: 80 },
-              { id: 15, label: 'Azure', category: 'Cloud', value: 70 },
-              { id: 16, label: 'GCP', category: 'Cloud', value: 65 }
+              { id: 1, label: "React", category: "Frontend", value: 85 },
+              { id: 2, label: "Node.js", category: "Backend", value: 80 },
+              { id: 3, label: "Python", category: "Backend", value: 90 },
+              { id: 4, label: "MongoDB", category: "Database", value: 75 },
+              { id: 5, label: "AWS", category: "Cloud", value: 85 },
+              { id: 6, label: "Docker", category: "DevOps", value: 80 },
+              { id: 7, label: "Kubernetes", category: "DevOps", value: 75 },
+              { id: 8, label: "SQL", category: "Database", value: 85 },
+              { id: 9, label: "MySQL", category: "Database", value: 80 },
+              { id: 10, label: "PostgreSQL", category: "Database", value: 80 }
             ],
             edges: [
-              { from: 1, to: 2 }, // JavaScript -> React
-              { from: 1, to: 3 }, // JavaScript -> TypeScript
-              { from: 1, to: 4 }, // JavaScript -> HTML/CSS
-              { from: 1, to: 5 }, // JavaScript -> Node.js
-              { from: 2, to: 3 }, // React -> TypeScript
-              { from: 2, to: 4 }, // React -> HTML/CSS
-              { from: 5, to: 8 }, // Node.js -> SQL
-              { from: 5, to: 9 }, // Node.js -> MongoDB
-              { from: 6, to: 8 }, // Python -> SQL
-              { from: 6, to: 10 }, // Python -> PostgreSQL
-              { from: 7, to: 8 }, // Java -> SQL
-              { from: 7, to: 10 }, // Java -> PostgreSQL
-              { from: 11, to: 12 }, // Docker -> Kubernetes
-              { from: 11, to: 13 }, // Docker -> Jenkins
-              { from: 14, to: 11 }, // AWS -> Docker
-              { from: 14, to: 12 }, // AWS -> Kubernetes
-              { from: 15, to: 11 }, // Azure -> Docker
-              { from: 16, to: 11 }, // GCP -> Docker
-              { from: 8, to: 9 }, // SQL -> MongoDB
-              { from: 8, to: 10 } // SQL -> PostgreSQL
+              { from: 1, to: 2 },
+              { from: 2, to: 3 },
+              { from: 2, to: 4 },
+              { from: 3, to: 8 },
+              { from: 5, to: 6 },
+              { from: 6, to: 7 },
+              { from: 8, to: 9 },
+              { from: 8, to: 10 }
             ]
           },
-          regionData: [
-            { region: 'North America', jobAvailability: 80, avgSalary: 95000 },
-            { region: 'Europe', jobAvailability: 75, avgSalary: 85000 },
-            { region: 'Asia', jobAvailability: 70, avgSalary: 65000 },
-            { region: 'Australia', jobAvailability: 72, avgSalary: 88000 },
-            { region: 'South America', jobAvailability: 65, avgSalary: 55000 }
-          ]
+          regionData: {
+            "United States of America": { 
+              jobCount: 150000, 
+              avgSalary: 95000,
+              growthRate: 15
+            },
+            "United Kingdom": { 
+              jobCount: 80000, 
+              avgSalary: 75000,
+              growthRate: 12
+            },
+            "Germany": { 
+              jobCount: 90000, 
+              avgSalary: 70000,
+              growthRate: 10
+            },
+            "France": { 
+              jobCount: 70000, 
+              avgSalary: 65000,
+              growthRate: 8
+            },
+            "India": { 
+              jobCount: 200000, 
+              avgSalary: 45000,
+              growthRate: 25
+            },
+            "China": { 
+              jobCount: 180000, 
+              avgSalary: 55000,
+              growthRate: 20
+            },
+            "Japan": { 
+              jobCount: 85000, 
+              avgSalary: 80000,
+              growthRate: 7
+            },
+            "Australia": { 
+              jobCount: 45000, 
+              avgSalary: 85000,
+              growthRate: 11
+            },
+            "Canada": { 
+              jobCount: 65000, 
+              avgSalary: 80000,
+              growthRate: 13
+            },
+            "Brazil": { 
+              jobCount: 55000, 
+              avgSalary: 45000,
+              growthRate: 18
+            }
+          }
         };
 
         setData(mockData);
@@ -528,12 +558,233 @@ const CareerTrends = () => {
     </Box>
   );
 
+  const RegionalJobMarket = () => {
+    const [tooltipContent, setTooltipContent] = useState("");
+    const [selectedMetric, setSelectedMetric] = useState("jobCount");
+    const [geoData, setGeoData] = useState(null);
+
+    useEffect(() => {
+      fetch(geoUrl)
+        .then(response => response.json())
+        .then(data => {
+          console.log("GeoJSON loaded:", data);
+          setGeoData(data);
+        })
+        .catch(error => console.error("Error loading GeoJSON:", error));
+    }, []);
+
+    const getColor = useCallback((value) => {
+      if (!value) return "#F5F4F6";
+      const maxValue = Math.max(...Object.values(data.regionData || {})
+        .map(d => d[selectedMetric] || 0));
+      const colorScale = scaleSequential()
+        .domain([0, maxValue])
+        .interpolator(interpolateBlues);
+      return colorScale(value);
+    }, [data.regionData, selectedMetric]);
+
+    const metrics = {
+      jobCount: "Job Openings",
+      avgSalary: "Average Salary",
+      growthRate: "Growth Rate"
+    };
+
+    return (
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Regional Job Market Analysis
+        </Typography>
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={3}>
+              <Box sx={{ mb: 3 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Metric</InputLabel>
+                  <Select
+                    value={selectedMetric}
+                    label="Metric"
+                    onChange={(e) => setSelectedMetric(e.target.value)}
+                  >
+                    {Object.entries(metrics).map(([key, label]) => (
+                      <MenuItem key={key} value={key}>{label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              <Paper 
+                variant="outlined" 
+                sx={{ 
+                  p: 2, 
+                  bgcolor: 'background.default',
+                  minHeight: '200px'
+                }}
+              >
+                {tooltipContent ? (
+                  <>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      {tooltipContent.name}
+                    </Typography>
+                    <Stack spacing={1}>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Job Openings
+                        </Typography>
+                        <Typography variant="h6">
+                          {tooltipContent.jobCount?.toLocaleString() || 'N/A'}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Average Salary
+                        </Typography>
+                        <Typography variant="h6">
+                          ${tooltipContent.avgSalary?.toLocaleString() || 'N/A'}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Growth Rate
+                        </Typography>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            color: (tooltipContent.growthRate || 0) > 0 
+                              ? 'success.main' 
+                              : 'error.main'
+                          }}
+                        >
+                          {tooltipContent.growthRate > 0 ? '+' : ''}{tooltipContent.growthRate}%
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </>
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                    Hover over a region to see detailed statistics
+                  </Typography>
+                )}
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={9}>
+              <Box sx={{ height: 500, width: '100%', position: 'relative' }}>
+                <ComposableMap
+                  projectionConfig={{
+                    rotate: [-10, 0, 0],
+                    scale: 147
+                  }}
+                >
+                  <ZoomableGroup>
+                    <Sphere stroke="#E4E5E6" strokeWidth={0.5} />
+                    <Graticule stroke="#E4E5E6" strokeWidth={0.5} />
+                    {geoData && (
+                      <Geographies geography={geoData}>
+                        {({ geographies }) =>
+                          geographies.map((geo) => {
+                            const countryName = geo.properties.name || geo.properties.ADMIN || geo.properties.NAME;
+                            const d = data.regionData[countryName];
+                            return (
+                              <Geography
+                                key={`${geo.rsmKey}-${countryName}`}
+                                geography={geo}
+                                fill={getColor(d?.[selectedMetric])}
+                                stroke="#D6D6DA"
+                                strokeWidth={0.5}
+                                style={{
+                                  default: {
+                                    outline: "none"
+                                  },
+                                  hover: {
+                                    fill: "#3f51b5",
+                                    outline: "none",
+                                    cursor: "pointer"
+                                  },
+                                  pressed: {
+                                    outline: "none"
+                                  }
+                                }}
+                                onMouseEnter={() => {
+                                  setTooltipContent(d ? {
+                                    name: countryName,
+                                    ...d
+                                  } : {
+                                    name: countryName,
+                                    jobCount: 0,
+                                    avgSalary: 0,
+                                    growthRate: 0
+                                  });
+                                }}
+                                onMouseLeave={() => {
+                                  setTooltipContent("");
+                                }}
+                              />
+                            );
+                          })
+                        }
+                      </Geographies>
+                    )}
+                  </ZoomableGroup>
+                </ComposableMap>
+              </Box>
+            </Grid>
+          </Grid>
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Legend
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ 
+                width: 200, 
+                height: 20, 
+                background: 'linear-gradient(to right, #f7fbff, #08519c)'
+              }} />
+              <Typography variant="body2">
+                Low to High {metrics[selectedMetric]}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
+    );
+  };
+
   // Prevent form submission
   const preventFormSubmit = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
     }
   }, []);
+
+  const filteredSalaryData = selectedExperience === 'All' 
+    ? [
+        {
+          id: 'Entry Level',
+          data: data.salaryTrends.map(trend => ({
+            x: trend.year,
+            y: trend.entry
+          }))
+        },
+        {
+          id: 'Mid Level',
+          data: data.salaryTrends.map(trend => ({
+            x: trend.year,
+            y: trend.mid
+          }))
+        },
+        {
+          id: 'Senior Level',
+          data: data.salaryTrends.map(trend => ({
+            x: trend.year,
+            y: trend.senior
+          }))
+        }
+      ]
+    : [{
+        id: selectedExperience,
+        data: data.salaryTrends.map(trend => ({
+          x: trend.year,
+          y: trend[selectedExperience.toLowerCase()]
+        }))
+      }];
 
   if (loading) {
     return <LoadingState />;
@@ -546,21 +797,6 @@ const CareerTrends = () => {
   if (!data || !data.salaryTrends || !data.techTrends || !data.skillConnections || !data.regionData) {
     return <ErrorMessage message="Failed to load career trends data" />;
   }
-
-  const filteredSalaryData = data.salaryTrends.map((trend) => ({
-    id: selectedExperience === 'All' ? 'All Levels' : selectedExperience,
-    color: selectedExperience === 'Entry' ? theme.palette.primary.main : 
-           selectedExperience === 'Mid' ? theme.palette.secondary.main : 
-           selectedExperience === 'Senior' ? theme.palette.success.main : 
-           theme.palette.info.main,
-    data: [{ 
-      x: trend.year, 
-      y: selectedExperience === 'Entry' ? trend.entry : 
-         selectedExperience === 'Mid' ? trend.mid : 
-         selectedExperience === 'Senior' ? trend.senior : 
-         trend.entry + trend.mid + trend.senior 
-    }]
-  }));
 
   return (
     <Container maxWidth="xl">
@@ -590,13 +826,72 @@ const CareerTrends = () => {
                   </Select>
                 </FormControl>
               </Grid>
+              <Grid item xs={12} md={8}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      p: 2, 
+                      bgcolor: 'primary.light',
+                      minWidth: 160,
+                      textAlign: 'center'
+                    }}
+                  >
+                    <Typography variant="body2" color="primary.dark">
+                      Average Growth
+                    </Typography>
+                    <Typography variant="h6" color="primary.dark">
+                      {(() => {
+                        const years = data.salaryTrends.length;
+                        const firstYear = data.salaryTrends[0];
+                        const lastYear = data.salaryTrends[years - 1];
+                        const growth = ((lastYear[selectedExperience.toLowerCase()] || 
+                          (lastYear.entry + lastYear.mid + lastYear.senior) / 3) - 
+                          (firstYear[selectedExperience.toLowerCase()] || 
+                          (firstYear.entry + firstYear.mid + firstYear.senior) / 3)) / 
+                          (firstYear[selectedExperience.toLowerCase()] || 
+                          (firstYear.entry + firstYear.mid + firstYear.senior) / 3) * 100;
+                        return `+${growth.toFixed(1)}%`;
+                      })()}
+                    </Typography>
+                  </Paper>
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      p: 2, 
+                      bgcolor: 'secondary.light',
+                      minWidth: 160,
+                      textAlign: 'center'
+                    }}
+                  >
+                    <Typography variant="body2" color="secondary.dark">
+                      Current Average
+                    </Typography>
+                    <Typography variant="h6" color="secondary.dark">
+                      ${(() => {
+                        const lastYear = data.salaryTrends[data.salaryTrends.length - 1];
+                        const salary = selectedExperience === 'All' 
+                          ? (lastYear.entry + lastYear.mid + lastYear.senior) / 3
+                          : lastYear[selectedExperience.toLowerCase()];
+                        return salary.toLocaleString();
+                      })()}
+                    </Typography>
+                  </Paper>
+                </Box>
+              </Grid>
             </Grid>
             <Box sx={{ height: 400 }}>
               <ResponsiveLine
                 data={filteredSalaryData}
-                margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+                margin={{ top: 50, right: 110, bottom: 50, left: 70 }}
                 xScale={{ type: 'point' }}
-                yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
+                yScale={{ 
+                  type: 'linear', 
+                  min: 'auto', 
+                  max: 'auto',
+                  stacked: false,
+                  reverse: false
+                }}
                 axisTop={null}
                 axisRight={null}
                 axisBottom={{
@@ -612,15 +907,34 @@ const CareerTrends = () => {
                   tickPadding: 5,
                   tickRotation: 0,
                   legend: 'Salary ($)',
-                  legendOffset: -40,
-                  legendPosition: 'middle'
+                  legendOffset: -50,
+                  legendPosition: 'middle',
+                  format: value => 
+                    new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                      notation: 'compact',
+                      compactDisplay: 'short'
+                    }).format(value)
                 }}
+                colors={{ scheme: 'category10' }}
+                enableGridX={false}
+                enableGridY={true}
                 pointSize={10}
                 pointColor={{ theme: 'background' }}
                 pointBorderWidth={2}
                 pointBorderColor={{ from: 'serieColor' }}
                 pointLabelYOffset={-12}
+                enableArea={selectedExperience !== 'All'}
+                areaBaselineValue={40000}
+                areaOpacity={0.15}
                 useMesh={true}
+                enableSlices="x"
+                crosshairType="cross"
+                motionConfig="gentle"
+                lineWidth={3}
                 legends={[
                   {
                     anchor: 'bottom-right',
@@ -630,7 +944,7 @@ const CareerTrends = () => {
                     translateY: 0,
                     itemsSpacing: 0,
                     itemDirection: 'left-to-right',
-                    itemWidth: 80,
+                    itemWidth: 140,
                     itemHeight: 20,
                     itemOpacity: 0.75,
                     symbolSize: 12,
@@ -647,7 +961,30 @@ const CareerTrends = () => {
                     ]
                   }
                 ]}
+                tooltip={({ point }) => (
+                  <Box
+                    sx={{
+                      background: 'white',
+                      padding: '12px',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <Typography variant="subtitle2">
+                      {point.serieId} ({point.data.x})
+                    </Typography>
+                    <Typography variant="body2">
+                      Salary: ${point.data.y.toLocaleString()}
+                    </Typography>
+                  </Box>
+                )}
               />
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary" align="center">
+                Data shows average salaries across different experience levels from {data.salaryTrends[0].year} to {data.salaryTrends[data.salaryTrends.length - 1].year}
+              </Typography>
             </Box>
           </CardContent>
         </Card>
@@ -732,7 +1069,9 @@ const CareerTrends = () => {
                   bgcolor: theme.palette.success.main, 
                   borderRadius: '50%' 
                 }} />
-                <Typography variant="caption">High Growth (&ge;20%)</Typography>
+                <Typography variant="caption">
+                  High Growth (&ge;20%)
+                </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Box sx={{ 
@@ -741,7 +1080,9 @@ const CareerTrends = () => {
                   bgcolor: theme.palette.warning.main, 
                   borderRadius: '50%' 
                 }} />
-                <Typography variant="caption">Moderate Growth (10-19%)</Typography>
+                <Typography variant="caption">
+                  Moderate Growth (10-19%)
+                </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Box sx={{ 
@@ -750,7 +1091,9 @@ const CareerTrends = () => {
                   bgcolor: theme.palette.error.main, 
                   borderRadius: '50%' 
                 }} />
-                <Typography variant="caption">Steady Growth (&lt;10%)</Typography>
+                <Typography variant="caption">
+                  Steady Growth (&lt;10%)
+                </Typography>
               </Box>
             </Box>
           </CardContent>
@@ -809,37 +1152,7 @@ const CareerTrends = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Regional Job Market Analysis
-            </Typography>
-            <Grid container spacing={2}>
-              {data.regionData.map((region) => (
-                <Grid item xs={12} sm={6} md={4} key={region.region}>
-                  <Paper sx={{ p: 2 }}>
-                    <Typography variant="subtitle1" gutterBottom>
-                      {region.region}
-                    </Typography>
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" gutterBottom>
-                        Job Availability Score
-                      </Typography>
-                      <Slider
-                        value={region.jobAvailability}
-                        disabled
-                        valueLabelDisplay="auto"
-                      />
-                    </Box>
-                    <Typography variant="body2">
-                      Average Salary: ${region.avgSalary.toLocaleString()}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </CardContent>
-        </Card>
+        <RegionalJobMarket />
       </Box>
     </Container>
   );
