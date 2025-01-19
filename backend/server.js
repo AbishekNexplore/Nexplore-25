@@ -54,6 +54,7 @@ const testMongoDB = async () => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/chat', require('./routes/chat'));
 
 // TODO: These routes will be implemented later
 // app.use('/api/recommendations', require('./routes/recommendations'));

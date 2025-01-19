@@ -9,16 +9,14 @@ router.post('/start', auth, async (req, res) => {
     try {
         const chat = new Chat({
             userId: req.user._id,
-            context: {
-                currentTopic: 'general',
-                relevantSkills: req.user.profile.skills || [],
-                careerInterests: req.user.profile.interests || []
-            }
+            messages: []
         });
 
         await chat.save();
+        console.log('New chat created:', chat);
         res.json(chat);
     } catch (error) {
+        console.error('Error creating chat:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -42,35 +40,20 @@ router.post('/:chatId/message', auth, async (req, res) => {
             role: 'user'
         });
 
-        // Get context for the chatbot
-        const context = {
-            pastUserInputs: chat.messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content),
-            generatedResponses: chat.messages
-                .filter(msg => msg.role === 'assistant')
-                .map(msg => msg.content)
-        };
-
-        // Get chatbot response
-        let response = await chatbot.processMessage(message, context);
-
-        // Enhance response with career context
-        response = chatbot.enhanceResponseWithCareerContext(response, req.user.profile);
+        // Get response from chatbot
+        const botResponse = await chatbot.processMessage(message);
 
         // Add bot response to chat
         chat.messages.push({
-            content: response,
+            content: botResponse,
             role: 'assistant'
         });
 
         await chat.save();
-        res.json({
-            message: response,
-            chat: chat
-        });
+        res.json({ response: botResponse });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error processing message:', error);
+        res.status(500).json({ error: 'Failed to process message' });
     }
 });
 

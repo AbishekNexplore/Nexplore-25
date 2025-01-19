@@ -21,8 +21,9 @@ import CareerTrends from './pages/Analytics/CareerTrends';
 import Profile from './pages/Profile/Profile';
 import LearningPath from './pages/Learning/LearningPath';
 
-// Auth Context
+// Providers
 import { AuthProvider } from './context/AuthContext';
+import { ChatProvider } from './context/ChatContext';
 
 // Store
 import { getCurrentUser } from './store/slices/authSlice';
@@ -86,101 +87,107 @@ function App() {
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {isAuthenticated && <Navbar />}
-        <Routes>
-          {/* Redirect root to login or dashboard based on auth status */}
-          <Route 
-            path="/" 
-            element={
-              isAuthenticated ? 
-              <Navigate to="/dashboard" replace /> : 
-              <Navigate to="/login" replace />
-            } 
-          />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AuthProvider>
+        <ChatProvider>
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {!loading && isAuthenticated && <Navbar />}
+            <Box component="main" sx={{ flexGrow: 1 }}>
+              <Routes>
+                {/* Redirect root to login or dashboard based on auth status */}
+                <Route 
+                  path="/" 
+                  element={
+                    isAuthenticated ? 
+                    <Navigate to="/dashboard" replace /> : 
+                    <Navigate to="/login" replace />
+                  } 
+                />
 
-          {/* Public Routes */}
-          <Route 
-            path="/login" 
-            element={
-              isAuthenticated ? 
-              <Navigate to="/dashboard" replace /> : 
-              <Login />
-            } 
-          />
-          <Route 
-            path="/register" 
-            element={
-              isAuthenticated ? 
-              <Navigate to="/dashboard" replace /> : 
-              <Register />
-            } 
-          />
+                {/* Public Routes */}
+                <Route 
+                  path="/login" 
+                  element={
+                    isAuthenticated ? 
+                    <Navigate to="/dashboard" replace /> : 
+                    <Login />
+                  } 
+                />
+                <Route 
+                  path="/register" 
+                  element={
+                    isAuthenticated ? 
+                    <Navigate to="/dashboard" replace /> : 
+                    <Register />
+                  } 
+                />
 
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/career-trends"
-            element={
-              <ProtectedRoute>
-                <CareerTrends />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chatbot"
-            element={
-              <ProtectedRoute>
-                <ChatBot />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/resume-feedback"
-            element={
-              <ProtectedRoute>
-                <ResumeFeedback />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/learning-path"
-            element={
-              <ProtectedRoute>
-                <LearningPath />
-              </ProtectedRoute>
-            }
-          />
+                {/* Protected Routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/career-trends"
+                  element={
+                    <ProtectedRoute>
+                      <CareerTrends />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chatbot"
+                  element={
+                    <ProtectedRoute>
+                      <ChatBot />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/resume-feedback"
+                  element={
+                    <ProtectedRoute>
+                      <ResumeFeedback />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/learning-path"
+                  element={
+                    <ProtectedRoute>
+                      <LearningPath />
+                    </ProtectedRoute>
+                  }
+                />
 
-          {/* Catch all route - redirect to login or dashboard */}
-          <Route 
-            path="*" 
-            element={
-              isAuthenticated ? 
-              <Navigate to="/dashboard" replace /> : 
-              <Navigate to="/login" replace />
-            } 
-          />
-        </Routes>
-      </ThemeProvider>
-    </AuthProvider>
+                {/* Catch all route - redirect to login or dashboard */}
+                <Route 
+                  path="*" 
+                  element={
+                    isAuthenticated ? 
+                    <Navigate to="/dashboard" replace /> : 
+                    <Navigate to="/login" replace />
+                  } 
+                />
+              </Routes>
+            </Box>
+          </Box>
+        </ChatProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

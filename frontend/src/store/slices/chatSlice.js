@@ -4,9 +4,14 @@ import api from '../../services/api';
 // Async thunks
 export const startNewChat = createAsyncThunk(
     'chat/startNew',
-    async (_, { rejectWithValue }) => {
+    async (_, { rejectWithValue, getState }) => {
+        const state = getState();
+        if (!state.auth.isAuthenticated) {
+            return rejectWithValue('User not authenticated');
+        }
         try {
             const response = await api.post('/chat/start');
+            console.log('New chat started:', response.data); // Log the response
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to start new chat');
