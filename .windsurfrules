@@ -1,2 +1,3 @@
 con't create new file unnecessarily, instead moidify the existing one to make changes.
 give windows powershell commands only in the terminal.
+only modify the part of the code which needs to be modified., instead of the whole code.

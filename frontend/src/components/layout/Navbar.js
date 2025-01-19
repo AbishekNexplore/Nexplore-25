@@ -51,29 +51,28 @@ const Navbar = () => {
             position="fixed" 
             sx={{ 
                 background: theme.palette.primary.main,
-                zIndex: theme.zIndex.appBar,
+                zIndex: theme.zIndex.drawer + 1,
                 height: '64px',
                 boxShadow: 1,
                 '& .MuiToolbar-root': {
                     minHeight: '64px',
                     height: '64px',
-                    background: theme.palette.primary.main
+                    background: theme.palette.primary.main,
+                    position: 'relative',
+                    zIndex: 'inherit'
                 },
                 '& .MuiTypography-root': {
-                    color: '#fff',
-                    zIndex: 'auto'
+                    color: '#fff'
                 },
                 '& .MuiSvgIcon-root': {
-                    color: '#fff',
-                    zIndex: 'auto'
+                    color: '#fff'
                 },
                 '& .MuiButton-root': {
-                    color: '#fff',
-                    zIndex: 'auto'
+                    color: '#fff'
                 }
             }}
         >
-            <Toolbar sx={{ background: theme.palette.primary.main }}>
+            <Toolbar>
                 <Box 
                     component="img" 
                     src="/map-svgrepo-com.svg" 
@@ -81,9 +80,7 @@ const Navbar = () => {
                     sx={{
                         width: 40,
                         height: 40,
-                        mr: 2,
-                        position: 'relative',
-                        zIndex: theme.zIndex.drawer + 3
+                        mr: 2
                     }}
                 />
                 <Typography 
@@ -92,30 +89,49 @@ const Navbar = () => {
                     sx={{ 
                         flexGrow: 1, 
                         fontWeight: 600, 
-                        letterSpacing: '.5px',
-                        position: 'relative',
-                        zIndex: theme.zIndex.drawer + 3
+                        letterSpacing: '.5px'
                     }}
                 >
                     Career Navigator
                 </Typography>
 
                 {isAuthenticated ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <IconButton color="inherit" sx={{ mr: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <IconButton
+                            size="large"
+                            aria-label="show notifications"
+                            color="inherit"
+                        >
                             <Notifications />
                         </IconButton>
                         <IconButton
+                            size="large"
+                            aria-label="go to dashboard"
+                            color="inherit"
+                            onClick={handleDashboard}
+                        >
+                            <Dashboard />
+                        </IconButton>
+                        <IconButton
+                            size="large"
+                            aria-label="account of current user"
+                            aria-controls="menu-appbar"
+                            aria-haspopup="true"
                             onClick={handleMenu}
                             color="inherit"
                         >
-                            {user?.profile?.avatar ? (
-                                <Avatar src={user.profile.avatar} />
+                            {user?.avatar ? (
+                                <Avatar 
+                                    src={user.avatar} 
+                                    alt={user.name}
+                                    sx={{ width: 32, height: 32 }}
+                                />
                             ) : (
                                 <AccountCircle />
                             )}
                         </IconButton>
                         <Menu
+                            id="menu-appbar"
                             anchorEl={anchorEl}
                             anchorOrigin={{
                                 vertical: 'bottom',
@@ -128,38 +144,21 @@ const Navbar = () => {
                             }}
                             open={Boolean(anchorEl)}
                             onClose={handleClose}
+                            sx={{
+                                '& .MuiPaper-root': {
+                                    mt: 1,
+                                    minWidth: 120
+                                }
+                            }}
                         >
                             <MenuItem onClick={handleProfile}>Profile</MenuItem>
                             <MenuItem onClick={handleLogout}>Logout</MenuItem>
                         </Menu>
-                        <Box sx={{ display: 'flex', gap: 2, ml: 2 }}>
-                            <Button
-                                color="inherit"
-                                startIcon={<Dashboard />}
-                                onClick={handleDashboard}
-                                sx={{
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                                    }
-                                }}
-                            >
-                                Dashboard
-                            </Button>
-                        </Box>
                     </Box>
                 ) : (
                     <Box>
-                        <Button color="inherit" onClick={() => navigate('/login')}>
-                            Login
-                        </Button>
-                        <Button 
-                            color="inherit" 
-                            variant="outlined" 
-                            onClick={() => navigate('/register')}
-                            sx={{ ml: 1 }}
-                        >
-                            Register
-                        </Button>
+                        <Button color="inherit" onClick={() => navigate('/login')}>Login</Button>
+                        <Button color="inherit" onClick={() => navigate('/register')}>Register</Button>
                     </Box>
                 )}
             </Toolbar>

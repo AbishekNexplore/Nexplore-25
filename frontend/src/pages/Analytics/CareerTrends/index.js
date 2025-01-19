@@ -241,19 +241,36 @@ const CareerTrends = () => {
         title: `${node.label} (${node.category})\nPopularity: ${node.value}%`,
         color: {
           background: node.label.toLowerCase().includes(searchSkill.toLowerCase())
-            ? theme.palette.primary.light
-            : theme.palette.primary.main,
+            ? theme.palette.warning.light
+            : theme.palette.primary.light,
           border: node.label.toLowerCase().includes(searchSkill.toLowerCase())
-            ? theme.palette.primary.main
-            : theme.palette.primary.dark,
+            ? theme.palette.warning.main
+            : theme.palette.primary.main,
           highlight: {
-            background: theme.palette.primary.light,
-            border: theme.palette.primary.main
+            background: node.label.toLowerCase().includes(searchSkill.toLowerCase())
+              ? theme.palette.warning.light
+              : theme.palette.primary.light,
+            border: node.label.toLowerCase().includes(searchSkill.toLowerCase())
+              ? theme.palette.warning.main
+              : theme.palette.primary.main
           },
           hover: {
-            background: theme.palette.primary.light,
-            border: theme.palette.primary.main
+            background: node.label.toLowerCase().includes(searchSkill.toLowerCase())
+              ? theme.palette.warning.main
+              : theme.palette.primary.main,
+            border: node.label.toLowerCase().includes(searchSkill.toLowerCase())
+              ? theme.palette.warning.dark
+              : theme.palette.primary.dark
           }
+        },
+        font: {
+          color: node.label.toLowerCase().includes(searchSkill.toLowerCase())
+            ? theme.palette.warning.dark
+            : theme.palette.text.primary,
+          size: node.label.toLowerCase().includes(searchSkill.toLowerCase())
+            ? 16
+            : 14,
+          bold: node.label.toLowerCase().includes(searchSkill.toLowerCase())
         }
       })) || [];
 
@@ -268,26 +285,29 @@ const CareerTrends = () => {
           color: theme.palette.divider,
           highlight: theme.palette.primary.main,
           hover: theme.palette.primary.light,
-          opacity: 0.8
+          opacity: searchSkill 
+            ? (filteredNodes.some(n => 
+                n.label.toLowerCase().includes(searchSkill.toLowerCase()) && 
+                (n.id === edge.from || n.id === edge.to)
+              ) ? 0.9 : 0.2)
+            : 0.8
         },
-        width: 2,
+        width: searchSkill 
+          ? (filteredNodes.some(n => 
+              n.label.toLowerCase().includes(searchSkill.toLowerCase()) && 
+              (n.id === edge.from || n.id === edge.to)
+            ) ? 3 : 1)
+          : 2,
         smooth: {
           type: 'curvedCW',
           roundness: 0.2
         }
       })) || [];
 
-      const filteredEdges = selectedCluster === 'All'
-        ? edges
-        : edges.filter(edge =>
-            filteredNodes.some(n => n.id === edge.from) &&
-            filteredNodes.some(n => n.id === edge.to)
-          );
-
       if (!networkInstanceRef.current) {
         const network = new Network(networkContainerRef.current, {
           nodes: new DataSet(filteredNodes),
-          edges: new DataSet(filteredEdges)
+          edges: new DataSet(edges)
         }, {
           nodes: {
             shape: 'dot',
@@ -385,7 +405,7 @@ const CareerTrends = () => {
         nodesDataSet.clear();
         edgesDataSet.clear();
         nodesDataSet.add(filteredNodes);
-        edgesDataSet.add(filteredEdges);
+        edgesDataSet.add(edges);
         network.fit();
       }
 
@@ -799,9 +819,31 @@ const CareerTrends = () => {
   }
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
+    <Container 
+      maxWidth="xl" 
+      sx={{
+        px: { xs: 2, sm: 3, md: 4 },
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      <Box 
+        sx={{ 
+          py: 4,
+          mt: '64px', 
+          pt: 3,
+          flex: 1
+        }}
+      >
+        <Typography 
+          variant="h4" 
+          gutterBottom 
+          sx={{ 
+            mb: 3,
+            fontWeight: 600
+          }}
+        >
           Career Trends & Insights
         </Typography>
 
@@ -880,17 +922,21 @@ const CareerTrends = () => {
                 </Box>
               </Grid>
             </Grid>
-            <Box sx={{ height: 400 }}>
+            <Box sx={{ height: 400, p: 1 }}>
               <ResponsiveLine
                 data={filteredSalaryData}
-                margin={{ top: 50, right: 110, bottom: 50, left: 70 }}
-                xScale={{ type: 'point' }}
+                margin={{ top: 40, right: 160, bottom: 60, left: 80 }}
+                xScale={{ 
+                  type: 'point',
+                  padding: 0.5 
+                }}
                 yScale={{ 
                   type: 'linear', 
-                  min: 'auto', 
+                  min: 'auto',
                   max: 'auto',
                   stacked: false,
-                  reverse: false
+                  reverse: false,
+                  padding: 0.2
                 }}
                 axisTop={null}
                 axisRight={null}
@@ -899,15 +945,15 @@ const CareerTrends = () => {
                   tickPadding: 5,
                   tickRotation: 0,
                   legend: 'Year',
-                  legendOffset: 36,
+                  legendOffset: 45,
                   legendPosition: 'middle'
                 }}
                 axisLeft={{
                   tickSize: 5,
-                  tickPadding: 5,
+                  tickPadding: 10,
                   tickRotation: 0,
-                  legend: 'Salary ($)',
-                  legendOffset: -50,
+                  legend: 'Annual Salary',
+                  legendOffset: -60,
                   legendPosition: 'middle',
                   format: value => 
                     new Intl.NumberFormat('en-US', {
@@ -919,43 +965,76 @@ const CareerTrends = () => {
                       compactDisplay: 'short'
                     }).format(value)
                 }}
-                colors={{ scheme: 'category10' }}
+                theme={{
+                  axis: {
+                    ticks: {
+                      text: {
+                        fontSize: 12
+                      }
+                    },
+                    legend: {
+                      text: {
+                        fontSize: 13,
+                        fontWeight: 600
+                      }
+                    }
+                  },
+                  grid: {
+                    line: {
+                      stroke: '#eee',
+                      strokeWidth: 1
+                    }
+                  },
+                  legends: {
+                    text: {
+                      fontSize: 12
+                    }
+                  },
+                  tooltip: {
+                    container: {
+                      fontSize: 13
+                    }
+                  }
+                }}
+                colors={{ scheme: 'set2' }}
                 enableGridX={false}
                 enableGridY={true}
-                pointSize={10}
+                gridYValues={5}
+                pointSize={8}
                 pointColor={{ theme: 'background' }}
                 pointBorderWidth={2}
                 pointBorderColor={{ from: 'serieColor' }}
                 pointLabelYOffset={-12}
                 enableArea={selectedExperience !== 'All'}
                 areaBaselineValue={40000}
-                areaOpacity={0.15}
+                areaOpacity={0.1}
                 useMesh={true}
                 enableSlices="x"
-                crosshairType="cross"
+                crosshairType="bottom"
                 motionConfig="gentle"
-                lineWidth={3}
+                lineWidth={2.5}
+                curve="monotoneX"
                 legends={[
                   {
-                    anchor: 'bottom-right',
+                    anchor: 'right',
                     direction: 'column',
                     justify: false,
-                    translateX: 100,
+                    translateX: 140,
                     translateY: 0,
-                    itemsSpacing: 0,
+                    itemsSpacing: 12,
                     itemDirection: 'left-to-right',
                     itemWidth: 140,
-                    itemHeight: 20,
+                    itemHeight: 14,
                     itemOpacity: 0.75,
-                    symbolSize: 12,
+                    symbolSize: 10,
                     symbolShape: 'circle',
                     symbolBorderColor: 'rgba(0, 0, 0, .5)',
                     effects: [
                       {
                         on: 'hover',
                         style: {
-                          itemBackground: 'rgba(0, 0, 0, .03)',
-                          itemOpacity: 1
+                          itemOpacity: 1,
+                          itemBackground: 'rgba(0, 0, 0, .03)'
                         }
                       }
                     ]
@@ -966,16 +1045,20 @@ const CareerTrends = () => {
                     sx={{
                       background: 'white',
                       padding: '12px',
-                      border: '1px solid #ccc',
+                      border: '1px solid #ddd',
                       borderRadius: '4px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      minWidth: '150px'
                     }}
                   >
-                    <Typography variant="subtitle2">
-                      {point.serieId} ({point.data.x})
+                    <Typography variant="subtitle2" sx={{ color: point.serieColor, mb: 0.5 }}>
+                      {point.serieId}
                     </Typography>
-                    <Typography variant="body2">
-                      Salary: ${point.data.y.toLocaleString()}
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                      Year: {point.data.x}
+                    </Typography>
+                    <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 500 }}>
+                      ${point.data.y.toLocaleString()}
                     </Typography>
                   </Box>
                 )}
