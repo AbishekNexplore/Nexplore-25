@@ -54,10 +54,15 @@ class PersonalInfoExtractor {
             name: this.extractName(text),
             email: this.extractEmail(text),
             phone: this.extractPhone(text),
-            linkedIn: this.extractLinkedIn(text),
+            linkedin: this.extractLinkedIn(text),
             portfolio: this.extractPortfolio(text),
             location: this.extractLocation(text)
         };
+    }
+
+    // Alias for extractAll to maintain compatibility
+    extract(text) {
+        return this.extractAll(text);
     }
 }
 

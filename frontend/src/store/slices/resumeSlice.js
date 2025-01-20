@@ -55,26 +55,28 @@ export const reanalyzeResume = createAsyncThunk(
 );
 
 // Slice
+const initialState = {
+    loading: false,
+    error: null,
+    resume: null,
+    analysis: null,
+    suggestedRoles: []
+};
+
 const resumeSlice = createSlice({
     name: 'resume',
-    initialState: {
-        resume: null,
-        analysis: null,
-        suggestedRoles: [],
-        loading: false,
-        error: null,
-        success: false
-    },
+    initialState,
     reducers: {
-        clearError: (state) => {
+        clearError(state) {
             state.error = null;
         },
-        clearAnalysis: (state) => {
+        clearAnalysis(state) {
+            state.analysis = null;
+        },
+        clearResume(state) {
             state.resume = null;
             state.analysis = null;
             state.suggestedRoles = [];
-            state.error = null;
-            state.success = false;
         }
     },
     extraReducers: (builder) => {
@@ -87,14 +89,13 @@ const resumeSlice = createSlice({
             .addCase(uploadResume.fulfilled, (state, action) => {
                 state.loading = false;
                 state.resume = action.payload;
-                state.success = true;
+                state.analysis = action.payload.analysis;
+                state.suggestedRoles = action.payload.suggestedRoles || [];
             })
             .addCase(uploadResume.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                state.success = false;
             })
-
             // Analyze Resume
             .addCase(analyzeResume.pending, (state) => {
                 state.loading = true;
@@ -102,16 +103,19 @@ const resumeSlice = createSlice({
             })
             .addCase(analyzeResume.fulfilled, (state, action) => {
                 state.loading = false;
+                state.resume = {
+                    ...state.resume,
+                    ...action.payload,
+                    analysis: action.payload.analysis,
+                    suggestedRoles: action.payload.suggestedRoles || []
+                };
                 state.analysis = action.payload.analysis;
-                state.suggestedRoles = action.payload.suggestedRoles;
-                state.success = true;
+                state.suggestedRoles = action.payload.suggestedRoles || [];
             })
             .addCase(analyzeResume.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                state.success = false;
             })
-
             // Get Suggested Roles
             .addCase(getSuggestedRoles.pending, (state) => {
                 state.loading = true;
@@ -119,15 +123,12 @@ const resumeSlice = createSlice({
             })
             .addCase(getSuggestedRoles.fulfilled, (state, action) => {
                 state.loading = false;
-                state.suggestedRoles = action.payload;
-                state.success = true;
+                state.suggestedRoles = action.payload.suggestedRoles || [];
             })
             .addCase(getSuggestedRoles.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                state.success = false;
             })
-
             // Reanalyze Resume
             .addCase(reanalyzeResume.pending, (state) => {
                 state.loading = true;
@@ -135,19 +136,21 @@ const resumeSlice = createSlice({
             })
             .addCase(reanalyzeResume.fulfilled, (state, action) => {
                 state.loading = false;
-                state.resume = action.payload;
+                state.resume = {
+                    ...state.resume,
+                    analysis: action.payload.analysis,
+                    suggestedRoles: action.payload.suggestedRoles || []
+                };
                 state.analysis = action.payload.analysis;
-                state.suggestedRoles = action.payload.suggestedRoles;
-                state.success = true;
+                state.suggestedRoles = action.payload.suggestedRoles || [];
             })
             .addCase(reanalyzeResume.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                state.success = false;
             });
     }
 });
 
-export const { clearError, clearAnalysis } = resumeSlice.actions;
+export const { clearError, clearAnalysis, clearResume } = resumeSlice.actions;
 
 export default resumeSlice.reducer;

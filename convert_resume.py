@@ -5,13 +5,24 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from reportlab.lib.units import inch
+import re
+
+def clean_text(text):
+    # Replace problematic characters
+    text = text.replace('•', '-')  # Replace bullet points
+    text = text.replace('"', '"').replace('"', '"')  # Replace smart quotes
+    text = text.replace(''', "'").replace(''', "'")  # Replace smart apostrophes
+    # Remove any other non-ASCII characters
+    text = re.sub(r'[^\x00-\x7F]+', '', text)
+    return text
 
 def create_pdf(input_file, output_file):
     doc = SimpleDocTemplate(output_file, pagesize=letter)
     story = []
     
-    with open(input_file, 'r') as file:
-        content = file.read()
+    # Read with UTF-8 encoding
+    with open(input_file, 'r', encoding='utf-8') as file:
+        content = clean_text(file.read())
     
     # Split content into sections
     sections = content.split('\n\n')
@@ -46,7 +57,12 @@ def create_pdf(input_file, output_file):
                         fontName='Helvetica'
                     )
                     if line.startswith('-'):
-                        line = '    • ' + line[1:].strip()
+                        line = '    ' + line  # Add indentation for bullet points
+                
+                # Escape special characters for ReportLab
+                line = line.replace('&', '&amp;')
+                line = line.replace('<', '&lt;')
+                line = line.replace('>', '&gt;')
                 
                 p = Paragraph(line, style)
                 story.append(p)
@@ -56,5 +72,7 @@ def create_pdf(input_file, output_file):
     
     doc.build(story)
 
-# Convert the resume
+# Convert both resumes
 create_pdf('test_resume.txt', 'test_resume.pdf')
+create_pdf('test_resume2.txt', 'test_resume2.pdf')
+print("Conversion completed successfully!")

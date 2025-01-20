@@ -49,127 +49,184 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
         }
 
         console.log('File received:', req.file);
-        const fileType = path.extname(req.file.originalname).substring(1);
-        console.log('File type:', fileType);
-        
-        // Get required skills from the dataset
-        const requiredSkills = await dataProcessor.getCommonSkills();
-        console.log('Got required skills');
 
-        // Analyze resume
-        console.log('Starting resume analysis...');
-        const analysis = await resumeProcessor.analyzeResume(
-            req.file.path,
-            fileType,
-            requiredSkills
-        );
-        console.log('Resume analysis completed');
+        try {
+            // Extract text and analyze resume
+            const text = await resumeProcessor.extractText(req.file.path);
+            console.log('Successfully extracted text from resume');
 
-        // Find matching job roles
-        const resume = new Resume({
-            userId: req.user._id,
-            fileName: req.file.originalname,
-            fileType: fileType,
-            filePath: req.file.path,
-            personalInfo: analysis.personalInfo,
-            analysis: analysis
-        });
+            const analysis = await resumeProcessor.analyzeResume(text);
+            console.log('Successfully analyzed resume');
 
-        // Generate embeddings and find matching roles
-        console.log('Finding matching roles...');
-        const suggestedRoles = await jobMatcher.findMatchingRoles(resume);
-        resume.suggestedRoles = suggestedRoles;
-        console.log('Found matching roles');
+            // Ensure default job roles exist
+            await jobMatcher.ensureDefaultRoles();
+            console.log('Ensured default job roles exist');
 
-        await resume.save();
-        console.log('Resume saved to database');
+            // Find matching roles based on extracted skills
+            const suggestedRoles = await jobMatcher.findMatchingRoles(analysis.extractedSkills);
+            console.log('Successfully found matching roles:', suggestedRoles);
 
-        res.json({
-            message: 'Resume uploaded and analyzed successfully',
-            resume: resume
-        });
+            // Create resume record
+            const resume = new Resume({
+                userId: req.user.id,
+                filePath: req.file.path,
+                fileName: req.file.originalname,
+                fileType: req.file.mimetype === 'application/pdf' ? 'pdf' : 
+                         req.file.mimetype === 'application/msword' ? 'doc' :
+                         req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? 'docx' : 'pdf',
+                analysis: {
+                    ...analysis,
+                    sectionScores: analysis.sectionScores || {
+                        formatting: 0,
+                        content: 0,
+                        skills: 0,
+                        achievements: 0
+                    },
+                    overallScore: analysis.overallScore || 0,
+                    extractedSkills: analysis.extractedSkills || [],
+                    suggestions: analysis.suggestions || [],
+                    aiSuggestions: analysis.aiSuggestions || ''
+                },
+                suggestedRoles
+            });
+
+            await resume.save();
+            console.log('Successfully saved resume to database');
+            
+            // Return the processed resume data
+            res.json({
+                resume: {
+                    fileName: resume.fileName,
+                    uploadDate: resume.uploadDate,
+                    analysis: resume.analysis,
+                    suggestedRoles
+                }
+            });
+        } catch (error) {
+            console.error('Error in resume processing:', error);
+            
+            // Delete uploaded file if there was an error
+            try {
+                await fs.unlink(req.file.path);
+                console.log('Cleaned up uploaded file after error');
+            } catch (unlinkError) {
+                console.error('Error deleting uploaded file:', unlinkError);
+            }
+
+            res.status(500).json({ 
+                error: error.message || 'Error processing resume',
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
+        }
+
     } catch (error) {
         console.error('Error in resume upload:', error);
-        // Clean up uploaded file if there's an error
+        
+        // Delete uploaded file if there's an error
         if (req.file) {
-            await fs.unlink(req.file.path).catch(console.error);
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.error('Error deleting file after failed upload:', unlinkError);
+            }
         }
-        res.status(500).json({ 
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        
+        res.status(500).json({ error: error.message });
     }
 });
 
-// Get user's resume analysis
+// Get resume analysis
 router.get('/analysis', auth, async (req, res) => {
     try {
-        const resume = await Resume.findOne({ userId: req.user._id })
-            .sort({ uploadDate: -1 })
-            .populate('suggestedRoles.roleId');
-
-        if (!resume) {
-            return res.status(404).json({ error: 'No resume found' });
-        }
-
-        res.json({
-            analysis: resume.analysis,
-            personalInfo: resume.personalInfo,
-            suggestedRoles: resume.suggestedRoles
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get suggested job roles
-router.get('/suggested-roles', auth, async (req, res) => {
-    try {
-        const resume = await Resume.findOne({ userId: req.user._id })
-            .sort({ uploadDate: -1 })
-            .populate('suggestedRoles.roleId');
-
-        if (!resume) {
-            return res.status(404).json({ error: 'No resume found' });
-        }
-
-        res.json(resume.suggestedRoles);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Update resume analysis
-router.post('/reanalyze', auth, async (req, res) => {
-    try {
-        const resume = await Resume.findOne({ userId: req.user._id })
+        const resume = await Resume.findOne({ userId: req.user.id })
             .sort({ uploadDate: -1 });
 
         if (!resume) {
             return res.status(404).json({ error: 'No resume found' });
         }
 
-        const requiredSkills = await dataProcessor.getCommonSkills();
-        
-        // Re-analyze resume
-        const analysis = await resumeProcessor.analyzeResume(
-            resume.filePath,
-            resume.fileType,
-            requiredSkills
-        );
+        // Format and send the analysis response
+        res.json({
+            fileName: resume.fileName,
+            personalInfo: resume.personalInfo,
+            analysis: {
+                overallScore: resume.analysis.overallScore || 0,
+                sectionScores: resume.analysis.sectionScores || {
+                    formatting: 0,
+                    content: 0,
+                    skills: 0,
+                    achievements: 0
+                },
+                extractedSkills: resume.analysis.extractedSkills || [],
+                missingKeySkills: resume.analysis.missingKeySkills || [],
+                suggestions: resume.analysis.suggestions || [],
+                aiSuggestions: resume.analysis.aiSuggestions || ''
+            },
+            suggestedRoles: resume.suggestedRoles || []
+        });
 
-        // Update analysis and find new matching roles
-        resume.analysis = analysis;
-        resume.suggestedRoles = await jobMatcher.findMatchingRoles(resume);
-        
+    } catch (error) {
+        console.error('Error fetching resume analysis:', error);
+        res.status(500).json({ error: 'Error fetching resume analysis' });
+    }
+});
+
+// Get suggested job roles
+router.get('/suggested-roles', auth, async (req, res) => {
+    try {
+        const resume = await Resume.findOne({ userId: req.user.id })
+            .sort({ uploadDate: -1 });
+
+        if (!resume) {
+            return res.status(404).json({ error: 'No resume found' });
+        }
+
+        res.json({
+            suggestedRoles: resume.suggestedRoles || []
+        });
+
+    } catch (error) {
+        console.error('Error fetching suggested roles:', error);
+        res.status(500).json({ error: 'Error fetching suggested roles' });
+    }
+});
+
+// Update resume analysis
+router.post('/reanalyze', auth, async (req, res) => {
+    try {
+        const resume = await Resume.findOne({ userId: req.user.id })
+            .sort({ uploadDate: -1 });
+
+        if (!resume) {
+            return res.status(404).json({ error: 'No resume found' });
+        }
+
+        // Re-analyze the resume text
+        const text = await resumeProcessor.extractText(resume.filePath, resume.fileType);
+        const analysis = await resumeProcessor.analyzeResume(text);
+
+        // Update the analysis
+        resume.analysis = {
+            extractedSkills: analysis.extractedSkills,
+            missingKeySkills: analysis.missingKeySkills,
+            overallScore: analysis.overallScore,
+            sectionScores: analysis.sectionScores,
+            suggestions: analysis.formatFeedback,
+            aiSuggestions: analysis.aiSuggestions
+        };
+        resume.suggestedRoles = analysis.suggestedRoles;
+
         await resume.save();
 
         res.json({
             message: 'Resume reanalyzed successfully',
-            resume: resume
+            analysis: resume.analysis,
+            suggestedRoles: resume.suggestedRoles
         });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error reanalyzing resume:', error);
+        res.status(500).json({ error: 'Error reanalyzing resume' });
     }
 });
 
@@ -178,7 +235,7 @@ router.delete('/:id', auth, async (req, res) => {
     try {
         const resume = await Resume.findOne({
             _id: req.params.id,
-            userId: req.user._id
+            user: req.user.id
         });
 
         if (!resume) {

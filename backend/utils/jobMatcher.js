@@ -45,47 +45,125 @@ class JobMatcher {
         return { matched, missing };
     }
 
-    async findMatchingRoles(resume, limit = 3) {
+    async findMatchingRoles(extractedSkills, limit = 5) {
         try {
-            // Generate embedding for the resume
-            const resumeEmbedding = await this.generateResumeEmbedding(resume);
-
-            // Get all job roles
-            const jobRoles = await JobRole.find({});
-            const matches = [];
-
-            // Calculate similarity scores
-            for (const role of jobRoles) {
-                if (!role.embedding) {
-                    role.embedding = await this.generateJobRoleEmbedding(role);
-                    await role.save();
-                }
-
-                const similarity = this.cosineSimilarity(resumeEmbedding, role.embedding);
-                if (similarity >= this.similarityThreshold) {
-                    const { matched, missing } = this.findMatchedAndMissingSkills(
-                        resume.analysis.extractedSkills,
-                        role.requiredSkills
-                    );
-
-                    matches.push({
-                        roleId: role._id,
-                        matchScore: similarity * 100,
-                        matchedSkills: matched,
-                        missingSkills: missing
-                    });
-                }
-            }
+            // Get all job roles from the database
+            const allRoles = await JobRole.find({});
+            
+            // Calculate match scores for each role
+            const matchedRoles = allRoles.map(role => {
+                const { matched, missing } = this.findMatchedAndMissingSkills(extractedSkills, role.requiredSkills);
+                const matchScore = (matched.length / role.requiredSkills.length) * 100;
+                
+                return {
+                    title: role.title,
+                    matchScore,
+                    description: role.description,
+                    requirements: role.requiredSkills,
+                    matchedSkills: matched,
+                    missingSkills: missing
+                };
+            });
 
             // Sort by match score and return top matches
-            return matches
+            return matchedRoles
                 .sort((a, b) => b.matchScore - a.matchScore)
                 .slice(0, limit);
-
         } catch (error) {
             console.error('Error finding matching roles:', error);
-            throw error;
+            return [];
         }
+    }
+
+    async ensureDefaultRoles() {
+        try {
+            const count = await JobRole.countDocuments();
+            if (count === 0) {
+                const defaultRoles = [
+                    {
+                        title: 'Full Stack Developer',
+                        description: 'Build and maintain web applications using modern technologies',
+                        requiredSkills: ['JavaScript', 'React', 'Node.js', 'MongoDB', 'Express', 'Git', 'RESTful API']
+                    },
+                    {
+                        title: 'Data Scientist',
+                        description: 'Analyze data and build machine learning models',
+                        requiredSkills: ['Python', 'Machine Learning', 'SQL', 'TensorFlow', 'PyTorch', 'Data Analysis']
+                    },
+                    {
+                        title: 'DevOps Engineer',
+                        description: 'Manage infrastructure and deployment pipelines',
+                        requiredSkills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Linux', 'Git']
+                    },
+                    {
+                        title: 'Frontend Developer',
+                        description: 'Create responsive and user-friendly web interfaces',
+                        requiredSkills: ['JavaScript', 'React', 'HTML5', 'CSS3', 'TypeScript', 'Redux']
+                    },
+                    {
+                        title: 'Backend Developer',
+                        description: 'Design and implement server-side applications',
+                        requiredSkills: ['Node.js', 'Express', 'MongoDB', 'RESTful API', 'SQL', 'Microservices']
+                    }
+                ];
+
+                await JobRole.insertMany(defaultRoles);
+                console.log('Added default job roles');
+            }
+        } catch (error) {
+            console.error('Error ensuring default roles:', error);
+        }
+    }
+
+    async getRequiredSkills() {
+        try {
+            // Get all job roles from the database
+            const roles = await JobRole.find({}, 'requiredSkills');
+            
+            // Combine all required skills and remove duplicates
+            const allSkills = [...new Set(roles.reduce((acc, role) => 
+                [...acc, ...role.requiredSkills], []))];
+            
+            return allSkills;
+        } catch (error) {
+            console.error('Error getting required skills:', error);
+            return [];
+        }
+    }
+
+    async getSuggestedRoles(skills) {
+        try {
+            // Find roles that match the given skills
+            const roles = await JobRole.find({
+                requiredSkills: { $in: skills }
+            }).limit(5);
+
+            // If no exact matches, find roles with similar skills
+            if (roles.length === 0) {
+                const allRoles = await JobRole.find({}).limit(5);
+                return allRoles.map(role => ({
+                    title: role.title,
+                    matchScore: this.calculateSkillMatchScore(skills, role.requiredSkills)
+                })).sort((a, b) => b.matchScore - a.matchScore);
+            }
+
+            return roles.map(role => ({
+                title: role.title,
+                matchScore: this.calculateSkillMatchScore(skills, role.requiredSkills)
+            })).sort((a, b) => b.matchScore - a.matchScore);
+        } catch (error) {
+            console.error('Error getting suggested roles:', error);
+            return [];
+        }
+    }
+
+    calculateSkillMatchScore(candidateSkills, roleSkills) {
+        const matchedSkills = roleSkills.filter(skill =>
+            candidateSkills.some(candidateSkill =>
+                candidateSkill.toLowerCase().includes(skill.toLowerCase())
+            )
+        );
+        return (matchedSkills.length / roleSkills.length) * 100;
     }
 }
 

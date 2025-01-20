@@ -1,0 +1,64 @@
+SARAH JOHNSON
+Data Scientist & Machine Learning Engineer
+sarah.johnson@email.com | (555) 123-4567 | San Francisco, CA
+LinkedIn: linkedin.com/in/sarahjohnson
+
+PROFESSIONAL SUMMARY
+Innovative Data Scientist with 5+ years of experience in machine learning, statistical analysis, and data visualization. Proven track record of developing and deploying ML models that increased business efficiency by 35%. Expertise in Python, TensorFlow, and cloud computing platforms.
+
+WORK EXPERIENCE
+
+Senior Data Scientist | TechCorp Inc. | 2021 - Present
+• Led a team of 4 data scientists in developing a customer churn prediction model, reducing churn by 28%
+• Implemented automated ML pipeline using AWS SageMaker, reducing model deployment time by 60%
+• Created real-time analytics dashboard using Tableau, processing 1M+ daily data points
+• Collaborated with product team to integrate ML features, increasing user engagement by 45%
+
+Machine Learning Engineer | DataTech Solutions | 2019 - 2021
+• Developed and deployed 5 production-ready ML models for natural language processing
+• Optimized recommendation engine, improving click-through rates by 25%
+• Implemented A/B testing framework for model evaluation, processing 500K+ daily users
+• Reduced model inference time by 40% through optimization techniques
+
+Data Analyst | Analytics Pro | 2018 - 2019
+• Analyzed customer behavior patterns using SQL and Python, identifying key trends
+• Created automated reporting system, saving 20 hours of manual work weekly
+• Developed predictive models for sales forecasting with 92% accuracy
+
+EDUCATION
+Master of Science in Computer Science | Stanford University | 2018
+• Specialization in Machine Learning and Artificial Intelligence
+• GPA: 3.8/4.0
+
+Bachelor of Science in Statistics | UC Berkeley | 2016
+• Minor in Computer Science
+• Dean's List: All semesters
+
+TECHNICAL SKILLS
+• Programming: Python, R, SQL, Java
+• ML/DL Frameworks: TensorFlow, PyTorch, scikit-learn
+• Cloud Platforms: AWS, Google Cloud Platform
+• Big Data: Hadoop, Spark, Kafka
+• Visualization: Tableau, PowerBI, Matplotlib
+• Tools: Git, Docker, Kubernetes
+
+PROJECTS
+Sentiment Analysis Engine
+• Built end-to-end sentiment analysis system processing 100K+ social media posts daily
+• Achieved 89% accuracy using BERT-based model
+• Deployed on AWS using containerization
+
+Real-time Anomaly Detection
+• Developed system for detecting fraudulent transactions in real-time
+• Reduced false positives by 40% compared to previous system
+• Implemented using Kafka and PySpark
+
+CERTIFICATIONS
+• AWS Certified Machine Learning - Specialty
+• Google Cloud Professional Data Engineer
+• Deep Learning Specialization - Coursera
+
+ACHIEVEMENTS
+• Speaker at PyData Conference 2022
+• Published paper on "Efficient Deep Learning for Time Series Analysis" at ICML 2021
+• Winner, Kaggle Competition - Top 3% among 10,000+ participants

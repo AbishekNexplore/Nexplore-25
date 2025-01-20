@@ -49,23 +49,39 @@ class HuggingFaceService {
                 new RegExp(`\\b${verb}\\b`, 'i').test(text)
             );
             
-            return foundVerbs.length > 0 ? foundVerbs : ['developed', 'implemented'];
+            return foundVerbs;
         }
 
         try {
-            const prompt = `Extract all action verbs from this text and list them:\n\n${text}`;
+            const prompt = `Extract action verbs from this text that describe professional achievements. Only return the verbs in a comma-separated list: ${text}`;
+            
             const response = await this.hf.textGeneration({
                 model: this.textGenerationModel,
                 inputs: prompt,
                 parameters: {
                     max_length: 100,
-                    temperature: 0.3,
+                    temperature: 0.3
                 }
             });
-            return response[0].generated_text.split(',').map(verb => verb.trim());
+
+            if (!response || !response.generated_text) {
+                console.warn('No response from Hugging Face API, using fallback');
+                return this.detectActionVerbs(text); // Recursive call will use fallback
+            }
+
+            // Clean and process the response
+            const verbs = response.generated_text
+                .toLowerCase()
+                .split(',')
+                .map(verb => verb.trim())
+                .filter(verb => verb.length > 0);
+
+            return verbs;
+
         } catch (error) {
             console.error('Error detecting action verbs:', error);
-            return ['developed', 'implemented']; // Default fallback
+            // Use fallback method
+            return this.detectActionVerbs(text); // Recursive call will use fallback
         }
     }
 

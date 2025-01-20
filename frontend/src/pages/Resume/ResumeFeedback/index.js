@@ -39,6 +39,11 @@ const ResumeFeedback = () => {
   const navigate = useNavigate();
   const { loading, resume, analysis } = useSelector((state) => state.resume);
 
+  const resetResumeState = () => {
+    // Clear the resume and analysis from Redux state
+    dispatch({ type: 'resume/clearResume' });
+  };
+
   const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
     if (file && (file.type === 'application/pdf' || 
@@ -175,7 +180,7 @@ const ResumeFeedback = () => {
                 />
               ))}
             </Box>
-          </>
+        </>
         )}
       </CardContent>
     </Card>
@@ -228,14 +233,14 @@ const ResumeFeedback = () => {
         {suggestedRoles?.map((role, index) => (
           <Box key={index} sx={{ mb: 2 }}>
             <Typography variant="subtitle1" color="primary">
-              {role.roleId.title}
+              {role.title}
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Match Score: {Math.round(role.matchScore)}%
             </Typography>
             <Box sx={{ mb: 1 }}>
               <Typography variant="body2">Matching Skills:</Typography>
-              {role.matchedSkills.map((skill, idx) => (
+              {role.matchedSkills?.map((skill, idx) => (
                 <Chip
                   key={idx}
                   label={skill}
@@ -246,7 +251,7 @@ const ResumeFeedback = () => {
                 />
               ))}
             </Box>
-            {role.missingSkills.length > 0 && (
+            {role.missingSkills?.length > 0 && (
               <Box>
                 <Typography variant="body2">Skills to Develop:</Typography>
                 {role.missingSkills.map((skill, idx) => (
@@ -271,7 +276,7 @@ const ResumeFeedback = () => {
     <Box sx={{ 
       flexGrow: 1,
       minHeight: '100vh',
-      pt: { xs: 8, sm: 9 },  
+      pt: { xs: 8, sm: 9 },
       pb: 4,
       backgroundColor: (theme) => theme.palette.grey[50]
     }}>
@@ -284,15 +289,30 @@ const ResumeFeedback = () => {
                 p: 3, 
                 mb: 3,
                 backgroundColor: 'transparent',
-                border: 'none'
+                border: 'none',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
               }}
             >
-              <Typography variant="h4" component="h1" gutterBottom>
-                Resume Analysis
-              </Typography>
-              <Typography variant="body1" color="textSecondary">
-                Upload your resume to get personalized feedback and career recommendations
-              </Typography>
+              <Box>
+                <Typography variant="h4" component="h1" gutterBottom>
+                  Resume Analysis
+                </Typography>
+                <Typography variant="body1" color="textSecondary">
+                  Upload your resume to get personalized feedback and career recommendations
+                </Typography>
+              </Box>
+              {resume && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={resetResumeState}
+                  startIcon={<UploadIcon />}
+                >
+                  Upload New Resume
+                </Button>
+              )}
             </Paper>
           </Grid>
 
@@ -391,6 +411,141 @@ const ResumeFeedback = () => {
                     </Button>
                   </Box>
                 </Grid>
+              </Grid>
+            </Grid>
+          )}
+          {resume && analysis && (
+            <Grid item xs={12}>
+              <Grid container spacing={3}>
+                {resume?.analysis?.sectionScores && (
+                  <Grid item xs={12}>
+                    <Box mt={4}>
+                      <Typography variant="h6" gutterBottom>
+                        Section Scores
+                      </Typography>
+                      <Grid container spacing={2}>
+                        {Object.entries(resume.analysis.sectionScores).map(([section, score]) => (
+                          <Grid item xs={12} sm={6} md={3} key={section}>
+                            <Card>
+                              <CardContent>
+                                <Typography variant="subtitle1" gutterBottom style={{ textTransform: 'capitalize' }}>
+                                  {section}
+                                </Typography>
+                                <Box display="flex" alignItems="center">
+                                  <Box width="100%" mr={1}>
+                                    <LinearProgress 
+                                      variant="determinate" 
+                                      value={score} 
+                                      sx={{
+                                        height: 10,
+                                        borderRadius: 5,
+                                        backgroundColor: '#e0e0e0',
+                                        '& .MuiLinearProgress-bar': {
+                                          backgroundColor: score >= 80 ? '#4caf50' : score >= 60 ? '#ff9800' : '#f44336',
+                                          borderRadius: 5,
+                                        },
+                                      }}
+                                    />
+                                  </Box>
+                                  <Box minWidth={35}>
+                                    <Typography variant="body2" color="textSecondary">{`${Math.round(score)}%`}</Typography>
+                                  </Box>
+                                </Box>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  </Grid>
+                )}
+                {resume?.analysis?.extractedSkills && (
+                  <Grid item xs={12}>
+                    <Box mt={4}>
+                      <Typography variant="h6" gutterBottom>
+                        Skills Analysis
+                      </Typography>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="subtitle1" gutterBottom>
+                            Identified Skills
+                          </Typography>
+                          <Box display="flex" flexWrap="wrap" gap={1}>
+                            {resume.analysis.extractedSkills.map((skill, index) => (
+                              <Chip
+                                key={index}
+                                label={skill}
+                                color="primary"
+                                variant="outlined"
+                                size="small"
+                              />
+                            ))}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Box>
+                  </Grid>
+                )}
+                {resume?.analysis?.suggestions && resume.analysis.suggestions.length > 0 && (
+                  <Grid item xs={12}>
+                    <Box mt={4}>
+                      <Typography variant="h6" gutterBottom>
+                        Improvement Suggestions
+                      </Typography>
+                      <List>
+                        {resume.analysis.suggestions.map((suggestion, index) => (
+                          <ListItem key={index}>
+                            <ListItemIcon>
+                              <InfoIcon color="primary" />
+                            </ListItemIcon>
+                            <ListItemText primary={suggestion} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  </Grid>
+                )}
+                {resume?.analysis?.aiSuggestions && (
+                  <Grid item xs={12}>
+                    <Box mt={4}>
+                      <Typography variant="h6" gutterBottom>
+                        AI-Powered Suggestions
+                      </Typography>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="body1">
+                            {resume.analysis.aiSuggestions}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Box>
+                  </Grid>
+                )}
+                {resume?.suggestedRoles && resume.suggestedRoles.length > 0 && (
+                  <Grid item xs={12}>
+                    <Box mt={4}>
+                      <Typography variant="h6" gutterBottom>
+                        Suggested Job Roles
+                      </Typography>
+                      <Grid container spacing={2}>
+                        {resume.suggestedRoles.map((role, index) => (
+                          <Grid item xs={12} sm={6} md={4} key={index}>
+                            <Card>
+                              <CardContent>
+                                <Typography variant="subtitle1" gutterBottom>
+                                  {role.title}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                  Match Score: {Math.round(role.matchScore)}%
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  </Grid>
+                )}
               </Grid>
             </Grid>
           )}
