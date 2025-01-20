@@ -277,6 +277,10 @@ class ResumeProcessor {
         try {
             console.log('Starting resume analysis...');
             
+            // Extract personal info
+            const personalInfo = await personalInfoExtractor.extract(text);
+            console.log('Extracted personal info:', personalInfo);
+
             // Extract skills
             const extractedSkills = await this.extractSkills(text);
             console.log('Extracted skills:', extractedSkills);
@@ -310,6 +314,7 @@ class ResumeProcessor {
             const aiSuggestions = await this.getAISuggestions(text, extractedSkills, actionVerbs);
 
             return {
+                personalInfo,
                 extractedSkills,
                 missingKeySkills,
                 sectionScores,
