@@ -6,6 +6,7 @@ const fs = require('fs').promises;
 const { auth } = require('../middleware/auth');
 const Resume = require('../models/Resume');
 const resumeProcessor = require('../utils/resumeProcessor');
+const jobMatcher = require('../utils/jobMatcher');
 const dataProcessor = require('../utils/dataProcessor');
 
 // Configure multer for file upload
@@ -59,14 +60,19 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
             requiredSkills
         );
 
-        // Save resume data to database
+        // Find matching job roles
         const resume = new Resume({
             userId: req.user._id,
             fileName: req.file.originalname,
             fileType: fileType,
             filePath: req.file.path,
+            personalInfo: analysis.personalInfo,
             analysis: analysis
         });
+
+        // Generate embeddings and find matching roles
+        const suggestedRoles = await jobMatcher.findMatchingRoles(resume);
+        resume.suggestedRoles = suggestedRoles;
 
         await resume.save();
 
@@ -87,13 +93,69 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
 router.get('/analysis', auth, async (req, res) => {
     try {
         const resume = await Resume.findOne({ userId: req.user._id })
+            .sort({ uploadDate: -1 })
+            .populate('suggestedRoles.roleId');
+
+        if (!resume) {
+            return res.status(404).json({ error: 'No resume found' });
+        }
+
+        res.json({
+            analysis: resume.analysis,
+            personalInfo: resume.personalInfo,
+            suggestedRoles: resume.suggestedRoles
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get suggested job roles
+router.get('/suggested-roles', auth, async (req, res) => {
+    try {
+        const resume = await Resume.findOne({ userId: req.user._id })
+            .sort({ uploadDate: -1 })
+            .populate('suggestedRoles.roleId');
+
+        if (!resume) {
+            return res.status(404).json({ error: 'No resume found' });
+        }
+
+        res.json(resume.suggestedRoles);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update resume analysis
+router.post('/reanalyze', auth, async (req, res) => {
+    try {
+        const resume = await Resume.findOne({ userId: req.user._id })
             .sort({ uploadDate: -1 });
 
         if (!resume) {
             return res.status(404).json({ error: 'No resume found' });
         }
 
-        res.json(resume.analysis);
+        const requiredSkills = await dataProcessor.getCommonSkills();
+        
+        // Re-analyze resume
+        const analysis = await resumeProcessor.analyzeResume(
+            resume.filePath,
+            resume.fileType,
+            requiredSkills
+        );
+
+        // Update analysis and find new matching roles
+        resume.analysis = analysis;
+        resume.suggestedRoles = await jobMatcher.findMatchingRoles(resume);
+        
+        await resume.save();
+
+        res.json({
+            message: 'Resume reanalyzed successfully',
+            resume: resume
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

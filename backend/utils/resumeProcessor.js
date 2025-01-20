@@ -2,6 +2,9 @@ const pdf = require('pdf-parse');
 const mammoth = require('mammoth');
 const fs = require('fs').promises;
 const path = require('path');
+const huggingfaceService = require('./huggingfaceService');
+const personalInfoExtractor = require('./personalInfoExtractor');
+const jobMatcher = require('./jobMatcher');
 
 class ResumeProcessor {
     constructor() {
@@ -13,6 +16,12 @@ class ResumeProcessor {
             'certifications',
             'summary',
             'objective'
+        ];
+        this.actionVerbsList = [
+            'achieved', 'improved', 'trained', 'managed', 'created',
+            'developed', 'implemented', 'increased', 'decreased', 'resolved',
+            'negotiated', 'launched', 'coordinated', 'generated', 'reduced',
+            'supervised', 'established', 'expanded', 'directed', 'organized'
         ];
     }
 
@@ -63,6 +72,34 @@ class ResumeProcessor {
         );
     }
 
+    async analyzeActionVerbs(text) {
+        try {
+            // First use basic detection
+            const foundVerbs = this.actionVerbsList.filter(verb => {
+                const regex = new RegExp(`\\b${verb}\\b`, 'gi');
+                return regex.test(text);
+            });
+
+            // Then use AI to find additional action verbs
+            const aiVerbs = await huggingfaceService.detectActionVerbs(text);
+            
+            // Combine and remove duplicates
+            return [...new Set([...foundVerbs, ...aiVerbs])];
+        } catch (error) {
+            console.error('Error analyzing action verbs:', error);
+            return foundVerbs;
+        }
+    }
+
+    async analyzeMeasurableAchievements(text) {
+        try {
+            return await huggingfaceService.detectMeasurableAchievements(text);
+        } catch (error) {
+            console.error('Error analyzing measurable achievements:', error);
+            return [];
+        }
+    }
+
     analyzeSections(text) {
         const feedback = [];
         
@@ -93,29 +130,53 @@ class ResumeProcessor {
         return feedback;
     }
 
-    calculateOverallScore(extractedSkills, missingSkills, formatFeedback) {
-        let score = 100;
+    calculateSectionScores(extractedSkills, actionVerbs, measurableAchievements, formatFeedback) {
+        const scores = {
+            formatting: 100,
+            content: 100,
+            achievements: 100,
+            skills: 100
+        };
 
-        // Deduct points for missing skills
-        score -= (missingSkills.length * 5);
-
-        // Deduct points for format issues
+        // Format score
         formatFeedback.forEach(feedback => {
             switch (feedback.severity) {
-                case 'high':
-                    score -= 10;
-                    break;
-                case 'medium':
-                    score -= 5;
-                    break;
-                case 'low':
-                    score -= 2;
-                    break;
+                case 'high': scores.formatting -= 20; break;
+                case 'medium': scores.formatting -= 10; break;
+                case 'low': scores.formatting -= 5; break;
             }
         });
 
-        // Ensure score stays within 0-100
-        return Math.max(0, Math.min(100, score));
+        // Skills score
+        scores.skills = Math.min(100, extractedSkills.length * 10);
+
+        // Achievements score
+        const hasActionVerbs = actionVerbs.length >= 5;
+        const hasMeasurableAchievements = measurableAchievements.length >= 3;
+        
+        if (!hasActionVerbs) scores.achievements -= 50;
+        if (!hasMeasurableAchievements) scores.achievements -= 50;
+
+        // Normalize scores
+        Object.keys(scores).forEach(key => {
+            scores[key] = Math.max(0, Math.min(100, scores[key]));
+        });
+
+        return scores;
+    }
+
+    calculateOverallScore(sectionScores) {
+        const weights = {
+            formatting: 0.2,
+            content: 0.3,
+            achievements: 0.25,
+            skills: 0.25
+        };
+
+        const weightedScore = Object.entries(sectionScores)
+            .reduce((score, [key, value]) => score + (value * weights[key]), 0);
+
+        return Math.round(weightedScore);
     }
 
     async analyzeResume(filePath, fileType, requiredSkills) {
@@ -123,27 +184,43 @@ class ResumeProcessor {
             // Extract text from resume
             const text = await this.extractText(filePath, fileType);
 
+            // Extract personal information
+            const personalInfo = personalInfoExtractor.extractAll(text);
+
             // Extract skills
             const extractedSkills = this.identifySkills(text, requiredSkills);
-
-            // Find missing key skills
             const missingKeySkills = this.findMissingKeySkills(extractedSkills, requiredSkills);
 
             // Analyze resume sections and format
             const formatFeedback = this.analyzeSections(text);
 
-            // Calculate overall score
-            const overallScore = this.calculateOverallScore(
+            // Analyze action verbs and achievements
+            const actionVerbs = await this.analyzeActionVerbs(text);
+            const measurableAchievements = await this.analyzeMeasurableAchievements(text);
+
+            // Get AI suggestions
+            const aiSuggestions = await huggingfaceService.analyzeText(text);
+
+            // Calculate scores
+            const sectionScores = this.calculateSectionScores(
                 extractedSkills,
-                missingKeySkills,
+                actionVerbs,
+                measurableAchievements,
                 formatFeedback
             );
 
+            const overallScore = this.calculateOverallScore(sectionScores);
+
             return {
+                personalInfo,
                 extractedSkills,
                 missingKeySkills,
                 recommendedSkills: missingKeySkills,
+                actionVerbs,
+                measurableAchievements,
                 formatFeedback,
+                aiSuggestions,
+                sectionScores,
                 overallScore
             };
         } catch (error) {

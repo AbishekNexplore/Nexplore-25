@@ -19,10 +19,38 @@ const resumeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    personalInfo: {
+        name: String,
+        email: String,
+        phone: String,
+        location: String,
+        linkedIn: String,
+        portfolio: String
+    },
+    education: [{
+        institution: String,
+        degree: String,
+        field: String,
+        startDate: Date,
+        endDate: Date,
+        gpa: Number,
+        highlights: [String]
+    }],
+    experience: [{
+        company: String,
+        position: String,
+        startDate: Date,
+        endDate: Date,
+        location: String,
+        achievements: [String],
+        technologies: [String]
+    }],
     analysis: {
         extractedSkills: [String],
         missingKeySkills: [String],
         recommendedSkills: [String],
+        actionVerbs: [String],
+        measurableAchievements: [String],
         formatFeedback: [{
             section: String,
             feedback: String,
@@ -31,11 +59,31 @@ const resumeSchema = new mongoose.Schema({
                 enum: ['high', 'medium', 'low']
             }
         }],
+        aiSuggestions: [String],
         overallScore: {
             type: Number,
             min: 0,
             max: 100
+        },
+        sectionScores: {
+            formatting: Number,
+            content: Number,
+            achievements: Number,
+            skills: Number
         }
+    },
+    suggestedRoles: [{
+        roleId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'JobRole'
+        },
+        matchScore: Number,
+        matchedSkills: [String],
+        missingSkills: [String]
+    }],
+    embedding: {
+        type: [Number],
+        sparse: true
     },
     uploadDate: {
         type: Date,
@@ -45,6 +93,14 @@ const resumeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
+});
+
+// Update the lastAnalyzed timestamp before saving if analysis is modified
+resumeSchema.pre('save', function(next) {
+    if (this.isModified('analysis')) {
+        this.lastAnalyzed = Date.now();
+    }
+    next();
 });
 
 const Resume = mongoose.model('Resume', resumeSchema);

@@ -11,7 +11,7 @@ export const uploadResume = createAsyncThunk(
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            return response.data;
+            return response.data.resume;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to upload resume');
         }
@@ -22,7 +22,7 @@ export const analyzeResume = createAsyncThunk(
     'resume/analyze',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await api.post('/resume/analyze');
+            const response = await api.get('/resume/analysis');
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to analyze resume');
@@ -30,14 +30,26 @@ export const analyzeResume = createAsyncThunk(
     }
 );
 
-export const getResumeHistory = createAsyncThunk(
-    'resume/history',
+export const getSuggestedRoles = createAsyncThunk(
+    'resume/suggestedRoles',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await api.get('/resume/history');
+            const response = await api.get('/resume/suggested-roles');
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch resume history');
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch suggested roles');
+        }
+    }
+);
+
+export const reanalyzeResume = createAsyncThunk(
+    'resume/reanalyze',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.post('/resume/reanalyze');
+            return response.data.resume;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to reanalyze resume');
         }
     }
 );
@@ -48,16 +60,21 @@ const resumeSlice = createSlice({
     initialState: {
         resume: null,
         analysis: null,
-        history: [],
+        suggestedRoles: [],
         loading: false,
-        error: null
+        error: null,
+        success: false
     },
     reducers: {
         clearError: (state) => {
             state.error = null;
         },
         clearAnalysis: (state) => {
+            state.resume = null;
             state.analysis = null;
+            state.suggestedRoles = [];
+            state.error = null;
+            state.success = false;
         }
     },
     extraReducers: (builder) => {
@@ -70,11 +87,12 @@ const resumeSlice = createSlice({
             .addCase(uploadResume.fulfilled, (state, action) => {
                 state.loading = false;
                 state.resume = action.payload;
-                state.error = null;
+                state.success = true;
             })
             .addCase(uploadResume.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+                state.success = false;
             })
 
             // Analyze Resume
@@ -84,27 +102,48 @@ const resumeSlice = createSlice({
             })
             .addCase(analyzeResume.fulfilled, (state, action) => {
                 state.loading = false;
-                state.analysis = action.payload;
-                state.error = null;
+                state.analysis = action.payload.analysis;
+                state.suggestedRoles = action.payload.suggestedRoles;
+                state.success = true;
             })
             .addCase(analyzeResume.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+                state.success = false;
             })
 
-            // Get Resume History
-            .addCase(getResumeHistory.pending, (state) => {
+            // Get Suggested Roles
+            .addCase(getSuggestedRoles.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getResumeHistory.fulfilled, (state, action) => {
+            .addCase(getSuggestedRoles.fulfilled, (state, action) => {
                 state.loading = false;
-                state.history = action.payload;
-                state.error = null;
+                state.suggestedRoles = action.payload;
+                state.success = true;
             })
-            .addCase(getResumeHistory.rejected, (state, action) => {
+            .addCase(getSuggestedRoles.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+                state.success = false;
+            })
+
+            // Reanalyze Resume
+            .addCase(reanalyzeResume.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(reanalyzeResume.fulfilled, (state, action) => {
+                state.loading = false;
+                state.resume = action.payload;
+                state.analysis = action.payload.analysis;
+                state.suggestedRoles = action.payload.suggestedRoles;
+                state.success = true;
+            })
+            .addCase(reanalyzeResume.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.success = false;
             });
     }
 });

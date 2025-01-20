@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import {
   Box,
   Container,
@@ -14,199 +15,326 @@ import {
   Card,
   CardContent,
   Grid,
-  Chip
+  Chip,
+  Divider,
+  Rating
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
   CheckCircle as CheckIcon,
   Warning as WarningIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Work as WorkIcon,
+  School as SchoolIcon,
+  Person as PersonIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  LocationOn as LocationIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../../context/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { uploadResume, analyzeResume } from '../../../store/slices/resumeSlice';
 
 const ResumeFeedback = () => {
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+  const dispatch = useDispatch();
+  const { loading, resume, analysis } = useSelector((state) => state.resume);
 
-  const handleFileUpload = (event) => {
-    const uploadedFile = event.target.files[0];
-    if (uploadedFile && (uploadedFile.type === 'application/pdf' || 
-        uploadedFile.type === 'application/msword' || 
-        uploadedFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
-      setFile(uploadedFile);
+  const onDrop = useCallback(async (acceptedFiles) => {
+    const file = acceptedFiles[0];
+    if (file && (file.type === 'application/pdf' || 
+        file.type === 'application/msword' || 
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
       setError(null);
-      analyzePDF(uploadedFile);
+      const formData = new FormData();
+      formData.append('resume', file);
+      try {
+        await dispatch(uploadResume(formData)).unwrap();
+        dispatch(analyzeResume());
+      } catch (err) {
+        setError(err.message || 'Error uploading resume');
+      }
     } else {
       setError('Please upload a PDF or Word document');
-      setFile(null);
     }
-  };
+  }, [dispatch]);
 
-  const analyzePDF = async (uploadedFile) => {
-    setLoading(true);
-    try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setFeedback({
-        score: 85,
-        strengths: [
-          'Clear professional experience section',
-          'Good use of action verbs',
-          'Relevant technical skills highlighted'
-        ],
-        improvements: [
-          'Add quantifiable achievements',
-          'Include more keywords from job descriptions',
-          'Strengthen education section'
-        ],
-        suggestions: [
-          'Consider adding certifications',
-          'Include a brief professional summary',
-          'Add links to project repositories'
-        ],
-        keywords: [
-          'Project Management',
-          'Agile',
-          'JavaScript',
-          'React',
-          'Node.js'
-        ]
-      });
-    } catch (err) {
-      setError('Error analyzing resume. Please try again.');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+    },
+    multiple: false
+  });
 
-  const FeedbackSection = ({ title, items, icon }) => (
-    <Card sx={{ height: '100%' }}>
+  const PersonalInfoCard = ({ personalInfo }) => (
+    <Card sx={{ mb: 2 }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {icon}
-          {title}
+        <Typography variant="h6" gutterBottom>
+          <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+          Personal Information
         </Typography>
         <List dense>
-          {items.map((item, index) => (
+          {personalInfo?.name && (
+            <ListItem>
+              <ListItemIcon><PersonIcon /></ListItemIcon>
+              <ListItemText primary="Name" secondary={personalInfo.name} />
+            </ListItem>
+          )}
+          {personalInfo?.email && (
+            <ListItem>
+              <ListItemIcon><EmailIcon /></ListItemIcon>
+              <ListItemText primary="Email" secondary={personalInfo.email} />
+            </ListItem>
+          )}
+          {personalInfo?.phone && (
+            <ListItem>
+              <ListItemIcon><PhoneIcon /></ListItemIcon>
+              <ListItemText primary="Phone" secondary={personalInfo.phone} />
+            </ListItem>
+          )}
+          {personalInfo?.location && (
+            <ListItem>
+              <ListItemIcon><LocationIcon /></ListItemIcon>
+              <ListItemText primary="Location" secondary={personalInfo.location} />
+            </ListItem>
+          )}
+        </List>
+      </CardContent>
+    </Card>
+  );
+
+  const ScoreCard = ({ score, sectionScores }) => (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Resume Score
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h3" color="primary">
+              {score}/100
+            </Typography>
+          </Box>
+          <Rating value={score / 20} readOnly max={5} />
+        </Box>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="subtitle1" gutterBottom>
+          Section Scores
+        </Typography>
+        {sectionScores && Object.entries(sectionScores).map(([section, score]) => (
+          <Box key={section} sx={{ mb: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              {section.charAt(0).toUpperCase() + section.slice(1)}
+            </Typography>
+            <LinearProgress 
+              variant="determinate" 
+              value={score} 
+              sx={{ height: 8, borderRadius: 4 }}
+            />
+          </Box>
+        ))}
+      </CardContent>
+    </Card>
+  );
+
+  const SkillsCard = ({ skills, missingSkills }) => (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Skills Analysis
+        </Typography>
+        <Typography variant="subtitle1" gutterBottom>
+          Identified Skills
+        </Typography>
+        <Box sx={{ mb: 2 }}>
+          {skills?.map((skill, index) => (
+            <Chip
+              key={index}
+              label={skill}
+              color="primary"
+              variant="outlined"
+              sx={{ m: 0.5 }}
+            />
+          ))}
+        </Box>
+        {missingSkills?.length > 0 && (
+          <>
+            <Typography variant="subtitle1" gutterBottom>
+              Recommended Skills
+            </Typography>
+            <Box>
+              {missingSkills.map((skill, index) => (
+                <Chip
+                  key={index}
+                  label={skill}
+                  color="warning"
+                  variant="outlined"
+                  sx={{ m: 0.5 }}
+                />
+              ))}
+            </Box>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const FeedbackCard = ({ feedback, aiSuggestions }) => (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Improvement Suggestions
+        </Typography>
+        <List dense>
+          {feedback?.map((item, index) => (
             <ListItem key={index}>
-              <ListItemIcon sx={{ minWidth: 30 }}>
-                <InfoIcon color="primary" fontSize="small" />
+              <ListItemIcon>
+                {item.severity === 'high' ? (
+                  <WarningIcon color="error" />
+                ) : (
+                  <InfoIcon color="info" />
+                )}
               </ListItemIcon>
-              <ListItemText primary={item} />
+              <ListItemText 
+                primary={item.feedback}
+                secondary={`Section: ${item.section}`}
+              />
             </ListItem>
           ))}
         </List>
+        {aiSuggestions && (
+          <>
+            <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+              AI-Powered Suggestions
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {aiSuggestions}
+            </Typography>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const JobMatchCard = ({ suggestedRoles }) => (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          <WorkIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+          Suggested Job Roles
+        </Typography>
+        {suggestedRoles?.map((role, index) => (
+          <Box key={index} sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" color="primary">
+              {role.roleId.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Match Score: {Math.round(role.matchScore)}%
+            </Typography>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="body2">Matching Skills:</Typography>
+              {role.matchedSkills.map((skill, idx) => (
+                <Chip
+                  key={idx}
+                  label={skill}
+                  size="small"
+                  color="success"
+                  variant="outlined"
+                  sx={{ m: 0.25 }}
+                />
+              ))}
+            </Box>
+            {role.missingSkills.length > 0 && (
+              <Box>
+                <Typography variant="body2">Skills to Develop:</Typography>
+                {role.missingSkills.map((skill, idx) => (
+                  <Chip
+                    key={idx}
+                    label={skill}
+                    size="small"
+                    color="warning"
+                    variant="outlined"
+                    sx={{ m: 0.25 }}
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+        ))}
       </CardContent>
     </Card>
   );
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Resume Feedback
-        </Typography>
-        
-        {/* Upload Section */}
-        <Box sx={{ my: 4, textAlign: 'center' }}>
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            style={{ display: 'none' }}
-            id="resume-upload"
-            onChange={handleFileUpload}
-          />
-          <label htmlFor="resume-upload">
-            <Button
-              variant="contained"
-              component="span"
-              startIcon={<UploadIcon />}
-              size="large"
-              disabled={loading}
-            >
-              Upload Resume
-            </Button>
-          </label>
-          
-          {file && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              File: {file.name}
-            </Typography>
-          )}
-          
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          )}
+      <Typography variant="h4" gutterBottom>
+        Resume Feedback
+      </Typography>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {!resume && (
+        <Paper
+          {...getRootProps()}
+          sx={{
+            p: 4,
+            textAlign: 'center',
+            cursor: 'pointer',
+            bgcolor: isDragActive ? 'action.hover' : 'background.paper',
+            border: '2px dashed',
+            borderColor: isDragActive ? 'primary.main' : 'divider'
+          }}
+        >
+          <input {...getInputProps()} />
+          <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+          <Typography variant="h6" gutterBottom>
+            {isDragActive ? 'Drop your resume here' : 'Drag and drop your resume here'}
+          </Typography>
+          <Typography color="text.secondary">
+            or click to select a file (PDF or Word document)
+          </Typography>
+        </Paper>
+      )}
+
+      {loading && (
+        <Box sx={{ width: '100%', mt: 2 }}>
+          <LinearProgress />
+          <Typography align="center" sx={{ mt: 1 }}>
+            Analyzing your resume...
+          </Typography>
         </Box>
+      )}
 
-        {loading && (
-          <Box sx={{ width: '100%', my: 4 }}>
-            <LinearProgress />
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
-              Analyzing your resume...
-            </Typography>
-          </Box>
-        )}
-
-        {/* Feedback Display */}
-        {feedback && !loading && (
-          <Box sx={{ mt: 4 }}>
-            {/* Score */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Typography variant="h3" color="primary">
-                {feedback.score}/100
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary">
-                Resume Score
-              </Typography>
-            </Box>
-
-            {/* Feedback Sections */}
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <FeedbackSection
-                  title="Strengths"
-                  items={feedback.strengths}
-                  icon={<CheckIcon color="success" />}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FeedbackSection
-                  title="Areas for Improvement"
-                  items={feedback.improvements}
-                  icon={<WarningIcon color="warning" />}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FeedbackSection
-                  title="Suggestions"
-                  items={feedback.suggestions}
-                  icon={<InfoIcon color="info" />}
-                />
-              </Grid>
-            </Grid>
-
-            {/* Keywords */}
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" gutterBottom>
-                Key Skills Detected
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {feedback.keywords.map((keyword, index) => (
-                  <Chip key={index} label={keyword} color="primary" variant="outlined" />
-                ))}
-              </Box>
-            </Box>
-          </Box>
-        )}
-      </Paper>
+      {resume && analysis && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <PersonalInfoCard personalInfo={resume.personalInfo} />
+            <ScoreCard 
+              score={analysis.overallScore} 
+              sectionScores={analysis.sectionScores}
+            />
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <SkillsCard 
+              skills={analysis.extractedSkills}
+              missingSkills={analysis.missingKeySkills}
+            />
+            <FeedbackCard 
+              feedback={analysis.formatFeedback}
+              aiSuggestions={analysis.aiSuggestions}
+            />
+            <JobMatchCard suggestedRoles={resume.suggestedRoles} />
+          </Grid>
+        </Grid>
+      )}
     </Container>
   );
 };
