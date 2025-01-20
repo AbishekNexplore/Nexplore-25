@@ -340,7 +340,7 @@ const Dashboard = () => {
             title: 'Resume Feedback',
             icon: <Description />,
             description: 'Get AI-powered resume analysis',
-            link: '/resume',
+            link: '/resume-feedback',
             stats: {
                 resumeScore: 85,
                 improvements: 12,

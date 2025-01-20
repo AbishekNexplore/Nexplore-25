@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -39,6 +40,7 @@ const ResumeFeedback = () => {
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { loading, resume, analysis } = useSelector((state) => state.resume);
 
   const onDrop = useCallback(async (acceptedFiles) => {
@@ -271,7 +273,7 @@ const ResumeFeedback = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom align="center">
         Resume Feedback
       </Typography>
 
@@ -282,26 +284,46 @@ const ResumeFeedback = () => {
       )}
 
       {!resume && (
-        <Paper
-          {...getRootProps()}
-          sx={{
-            p: 4,
-            textAlign: 'center',
-            cursor: 'pointer',
-            bgcolor: isDragActive ? 'action.hover' : 'background.paper',
-            border: '2px dashed',
-            borderColor: isDragActive ? 'primary.main' : 'divider'
-          }}
-        >
-          <input {...getInputProps()} />
-          <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
-            {isDragActive ? 'Drop your resume here' : 'Drag and drop your resume here'}
-          </Typography>
-          <Typography color="text.secondary">
-            or click to select a file (PDF or Word document)
-          </Typography>
-        </Paper>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          minHeight: '60vh' 
+        }}>
+          <Paper
+            {...getRootProps()}
+            sx={{
+              p: 6,
+              width: '100%',
+              maxWidth: 500,
+              textAlign: 'center',
+              cursor: 'pointer',
+              bgcolor: isDragActive ? 'action.hover' : 'background.paper',
+              border: '2px dashed',
+              borderColor: isDragActive ? 'primary.main' : 'divider',
+              borderRadius: 2,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: 'primary.main',
+                bgcolor: 'action.hover'
+              }
+            }}
+          >
+            <input {...getInputProps()} />
+            <UploadIcon sx={{ 
+              fontSize: 64, 
+              color: 'primary.main', 
+              mb: 2,
+              opacity: isDragActive ? 0.8 : 0.6
+            }} />
+            <Typography variant="h5" gutterBottom fontWeight="medium">
+              {isDragActive ? 'Drop your resume here' : 'Drag and drop your resume here'}
+            </Typography>
+            <Typography color="text.secondary">
+              or click to select a file (PDF or Word document)
+            </Typography>
+          </Paper>
+        </Box>
       )}
 
       {loading && (
@@ -332,6 +354,16 @@ const ResumeFeedback = () => {
               aiSuggestions={analysis.aiSuggestions}
             />
             <JobMatchCard suggestedRoles={resume.suggestedRoles} />
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                size="large"
+                onClick={() => navigate('/learning-path')}
+              >
+                Continue to Learning Path
+              </Button>
+            </Box>
           </Grid>
         </Grid>
       )}
