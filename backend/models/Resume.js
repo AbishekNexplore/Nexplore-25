@@ -24,6 +24,14 @@ const resumeSchema = new mongoose.Schema({
         default: Date.now
     },
     analysis: {
+        personalInfo: {
+            name: String,
+            email: String,
+            phone: String,
+            location: String,
+            linkedin: String,
+            portfolio: String
+        },
         overallScore: {
             type: Number,
             default: 0

@@ -56,7 +56,11 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
             console.log('Successfully extracted text from resume');
 
             const analysis = await resumeProcessor.analyzeResume(text);
-            console.log('Successfully analyzed resume');
+            console.log('Resume analysis result:', {
+                personalInfo: analysis.personalInfo,
+                overallScore: analysis.overallScore,
+                sectionScores: analysis.sectionScores
+            });
 
             // Ensure default job roles exist
             await jobMatcher.ensureDefaultRoles();
@@ -76,6 +80,7 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
                          req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? 'docx' : 'pdf',
                 analysis: {
                     ...analysis,
+                    personalInfo: analysis.personalInfo || {},
                     sectionScores: analysis.sectionScores || {
                         formatting: 0,
                         content: 0,
@@ -91,7 +96,11 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
             });
 
             await resume.save();
-            console.log('Successfully saved resume to database');
+            console.log('Saved resume to database:', {
+                fileName: resume.fileName,
+                personalInfo: resume.analysis.personalInfo,
+                overallScore: resume.analysis.overallScore
+            });
             
             // Return the processed resume data
             res.json({
@@ -148,7 +157,7 @@ router.get('/analysis', auth, async (req, res) => {
         // Format and send the analysis response
         res.json({
             fileName: resume.fileName,
-            personalInfo: resume.personalInfo,
+            personalInfo: resume.analysis.personalInfo,
             analysis: {
                 overallScore: resume.analysis.overallScore || 0,
                 sectionScores: resume.analysis.sectionScores || {
