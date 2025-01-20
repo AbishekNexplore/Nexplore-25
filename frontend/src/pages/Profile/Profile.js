@@ -7,7 +7,6 @@ import {
   Button,
   Box,
   Grid,
-  Divider,
   Alert
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,10 +26,8 @@ const Profile = () => {
     experience: ''
   });
 
-  // Initialize form data from Redux state
   useEffect(() => {
     if (reduxUser) {
-      console.log('Setting form data from Redux user:', reduxUser);
       setFormData({
         name: reduxUser.name || '',
         email: reduxUser.email || '',
@@ -51,143 +48,151 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage('');
+    setError('');
+
     try {
-      console.log('Submitting form data:', formData);
-      // Convert skills string to array and ensure name is properly set
-      const updatedData = {
+      const processedData = {
         ...formData,
-        name: formData.name.trim(),
-        skills: formData.skills.split(',').map(skill => skill.trim()).filter(Boolean)
+        skills: formData.skills.split(',').map(skill => skill.trim())
       };
-
-      console.log('Sending updated data to server:', updatedData);
-      // Update user profile in Redux
-      const result = await dispatch(updateProfile(updatedData)).unwrap();
-      console.log('Profile update result:', result);
-      
-      // If successful, show success message
+      await dispatch(updateProfile(processedData)).unwrap();
       setMessage('Profile updated successfully!');
-      setError('');
-
-      // Verify the data was saved
-      const savedData = localStorage.getItem('userData');
-      console.log('Verified saved user data:', savedData);
-      
-      // Optional: Update form data with the result
-      setFormData(prevData => ({
-        ...prevData,
-        ...result
-      }));
     } catch (err) {
-      console.error('Profile update error:', err);
       setError(err.message || 'Failed to update profile');
-      setMessage('');
     }
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Profile Settings
-        </Typography>
-        <Divider sx={{ mb: 4 }} />
-        
-        {message && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {message}
-          </Alert>
-        )}
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                label="Name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Current Role"
-                name="currentRole"
-                value={formData.currentRole}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Desired Role"
-                name="desiredRole"
-                value={formData.desiredRole}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Skills (comma-separated)"
-                name="skills"
-                value={formData.skills}
-                onChange={handleChange}
-                helperText="Enter your skills separated by commas"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Experience"
-                name="experience"
-                multiline
-                rows={4}
-                value={formData.experience}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center',
-                mt: 3
-              }}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  sx={{ minWidth: '200px' }}
-                >
-                  Save Changes
-                </Button>
-              </Box>
-            </Grid>
+    <Box sx={{ 
+      flexGrow: 1,
+      minHeight: '100vh',
+      pt: { xs: 8, sm: 9 },  // Add padding top to account for navbar
+      pb: 4,
+      backgroundColor: (theme) => theme.palette.grey[50]
+    }}>
+      <Container maxWidth="md">
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                backgroundColor: 'transparent',
+                border: 'none'
+              }}
+            >
+              <Typography variant="h4" component="h1" gutterBottom>
+                Profile Settings
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                Update your profile information and career preferences
+              </Typography>
+            </Paper>
           </Grid>
-        </form>
-      </Paper>
-    </Container>
+
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              {message && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {message}
+                </Alert>
+              )}
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      variant="outlined"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      variant="outlined"
+                      type="email"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Current Role"
+                      name="currentRole"
+                      value={formData.currentRole}
+                      onChange={handleChange}
+                      variant="outlined"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Desired Role"
+                      name="desiredRole"
+                      value={formData.desiredRole}
+                      onChange={handleChange}
+                      variant="outlined"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Skills (comma-separated)"
+                      name="skills"
+                      value={formData.skills}
+                      onChange={handleChange}
+                      variant="outlined"
+                      multiline
+                      rows={2}
+                      helperText="Enter your skills separated by commas (e.g., JavaScript, React, Node.js)"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Experience"
+                      name="experience"
+                      value={formData.experience}
+                      onChange={handleChange}
+                      variant="outlined"
+                      multiline
+                      rows={4}
+                      helperText="Briefly describe your work experience"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                      >
+                        Save Changes
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </form>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Container>
+    </Box>
   );
 };
 

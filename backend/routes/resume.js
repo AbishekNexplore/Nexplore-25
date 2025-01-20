@@ -48,17 +48,22 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
+        console.log('File received:', req.file);
         const fileType = path.extname(req.file.originalname).substring(1);
+        console.log('File type:', fileType);
         
         // Get required skills from the dataset
         const requiredSkills = await dataProcessor.getCommonSkills();
+        console.log('Got required skills');
 
         // Analyze resume
+        console.log('Starting resume analysis...');
         const analysis = await resumeProcessor.analyzeResume(
             req.file.path,
             fileType,
             requiredSkills
         );
+        console.log('Resume analysis completed');
 
         // Find matching job roles
         const resume = new Resume({
@@ -71,21 +76,28 @@ router.post('/upload', auth, upload.single('resume'), async (req, res) => {
         });
 
         // Generate embeddings and find matching roles
+        console.log('Finding matching roles...');
         const suggestedRoles = await jobMatcher.findMatchingRoles(resume);
         resume.suggestedRoles = suggestedRoles;
+        console.log('Found matching roles');
 
         await resume.save();
+        console.log('Resume saved to database');
 
         res.json({
             message: 'Resume uploaded and analyzed successfully',
             resume: resume
         });
     } catch (error) {
+        console.error('Error in resume upload:', error);
         // Clean up uploaded file if there's an error
         if (req.file) {
             await fs.unlink(req.file.path).catch(console.error);
         }
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
