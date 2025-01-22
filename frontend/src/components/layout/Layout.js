@@ -1,29 +1,30 @@
 import React from 'react';
-import { Box, Container, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import Navbar from './Navbar';
-import Sidebar from './Sidebar';
 
 const Layout = ({ children }) => {
     const theme = useTheme();
 
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-            <Sidebar />
-            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            minHeight: '100vh',
+            background: theme.palette.background.default,
+        }}>
+            <Box sx={{ height: '64px', flexShrink: 0 }}>
                 <Navbar />
-                <Box
-                    component="main"
-                    sx={{
-                        flexGrow: 1,
-                        bgcolor: theme.palette.background.default,
-                        p: 3,
-                        mt: 8
-                    }}
-                >
-                    <Container maxWidth="lg">
-                        {children}
-                    </Container>
-                </Box>
+            </Box>
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    pt: 3,
+                    pb: 3,
+                    background: theme.palette.background.default,
+                }}
+            >
+                {children}
             </Box>
         </Box>
     );

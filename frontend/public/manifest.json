@@ -1,6 +1,6 @@
 {
-  "short_name": "Career Guide",
-  "name": "AI Career Guidance Platform",
+  "short_name": "AI Career Nav",
+  "name": "AI Career Navigator",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,18 +8,13 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "map-svgrepo-com.svg",
+      "type": "image/svg+xml",
+      "sizes": "150x150"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#2563eb",
   "background_color": "#ffffff"
 }

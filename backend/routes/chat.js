@@ -9,16 +9,14 @@ router.post('/start', auth, async (req, res) => {
     try {
         const chat = new Chat({
             userId: req.user._id,
-            context: {
-                currentTopic: 'general',
-                relevantSkills: req.user.profile.skills || [],
-                careerInterests: req.user.profile.interests || []
-            }
+            messages: []
         });
 
         await chat.save();
+        console.log('New chat created:', chat);
         res.json(chat);
     } catch (error) {
+        console.error('Error creating chat:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -26,7 +24,9 @@ router.post('/start', auth, async (req, res) => {
 // Send message in chat
 router.post('/:chatId/message', auth, async (req, res) => {
     try {
-        const { message } = req.body;
+        const { content } = req.body;
+        console.log('Received message request:', { chatId: req.params.chatId, content });
+        
         const chat = await Chat.findOne({
             _id: req.params.chatId,
             userId: req.user._id
@@ -38,39 +38,41 @@ router.post('/:chatId/message', auth, async (req, res) => {
 
         // Add user message to chat
         chat.messages.push({
-            content: message,
+            content,
             role: 'user'
         });
 
-        // Get context for the chatbot
-        const context = {
-            pastUserInputs: chat.messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content),
-            generatedResponses: chat.messages
-                .filter(msg => msg.role === 'assistant')
-                .map(msg => msg.content)
-        };
+        try {
+            // Get response from chatbot
+            const botResponse = await chatbot.processMessage(content);
+            console.log('Bot response:', botResponse);
 
-        // Get chatbot response
-        let response = await chatbot.processMessage(message, context);
+            // Add bot response to chat
+            chat.messages.push({
+                content: botResponse,
+                role: 'assistant'
+            });
 
-        // Enhance response with career context
-        response = chatbot.enhanceResponseWithCareerContext(response, req.user.profile);
-
-        // Add bot response to chat
-        chat.messages.push({
-            content: response,
-            role: 'assistant'
-        });
-
-        await chat.save();
-        res.json({
-            message: response,
-            chat: chat
-        });
+            await chat.save();
+            
+            // Return both messages in the response
+            res.json({
+                userMessage: {
+                    content,
+                    role: 'user'
+                },
+                aiResponse: {
+                    content: botResponse,
+                    role: 'assistant'
+                }
+            });
+        } catch (error) {
+            console.error('Error getting bot response:', error);
+            res.status(500).json({ error: 'Failed to get bot response', details: error.message });
+        }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error processing message:', error);
+        res.status(500).json({ error: 'Failed to process message', details: error.message });
     }
 });
 

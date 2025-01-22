@@ -4,9 +4,14 @@ import api from '../../services/api';
 // Async thunks
 export const startNewChat = createAsyncThunk(
     'chat/startNew',
-    async (_, { rejectWithValue }) => {
+    async (_, { rejectWithValue, getState }) => {
+        const state = getState();
+        if (!state.auth.isAuthenticated) {
+            return rejectWithValue('User not authenticated');
+        }
         try {
             const response = await api.post('/chat/start');
+            console.log('New chat started:', response.data); // Log the response
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to start new chat');
@@ -18,9 +23,12 @@ export const sendMessage = createAsyncThunk(
     'chat/sendMessage',
     async ({ content, chatId }, { rejectWithValue }) => {
         try {
+            console.log('Sending message:', { content, chatId });
             const response = await api.post(`/chat/${chatId}/message`, { content });
+            console.log('Message response:', response.data);
             return response.data;
         } catch (error) {
+            console.error('Error in sendMessage:', error.response?.data || error.message);
             return rejectWithValue(error.response?.data?.message || 'Failed to send message');
         }
     }
@@ -88,13 +96,21 @@ const chatSlice = createSlice({
             })
 
             // Send Message
-            .addCase(sendMessage.pending, (state) => {
+            .addCase(sendMessage.pending, (state, action) => {
                 state.loading = true;
                 state.error = null;
+                // Add user message immediately
+                if (action.meta.arg.content) {
+                    state.messages = [...state.messages, {
+                        content: action.meta.arg.content,
+                        role: 'user'
+                    }];
+                }
             })
             .addCase(sendMessage.fulfilled, (state, action) => {
                 state.loading = false;
-                state.messages = [...state.messages, action.payload.userMessage, action.payload.aiResponse];
+                // Only add AI response since user message was added in pending
+                state.messages = [...state.messages, action.payload.aiResponse];
                 state.error = null;
             })
             .addCase(sendMessage.rejected, (state, action) => {

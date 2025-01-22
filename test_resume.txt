@@ -1,0 +1,68 @@
+John Doe
+Software Developer
+john.doe@email.com | +1 (555) 123-4567
+123 Tech Street, Silicon Valley, CA
+
+PROFESSIONAL SUMMARY
+Dedicated software developer with 3 years of experience in full-stack development, specializing in MERN stack applications. Strong background in building scalable web applications and implementing RESTful APIs.
+
+SKILLS
+Technical Skills:
+- JavaScript/TypeScript
+- React.js, Node.js
+- MongoDB, Express.js
+- HTML5, CSS3
+- Git, GitHub
+- AWS, Docker
+- Python, Django
+- RESTful APIs
+
+Soft Skills:
+- Problem Solving
+- Team Collaboration
+- Project Management
+- Agile Methodologies
+- Communication
+
+WORK EXPERIENCE
+
+Senior Software Developer | TechCorp Inc.
+January 2023 - Present
+- Developed and maintained multiple MERN stack applications
+- Implemented microservices architecture using Node.js and Docker
+- Reduced application load time by 40% through optimization
+- Led a team of 4 developers for major feature implementations
+
+Software Developer | StartUp Solutions
+June 2021 - December 2022
+- Built responsive web applications using React.js
+- Integrated third-party APIs and payment gateways
+- Implemented user authentication and authorization
+- Collaborated with UX team for frontend improvements
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+Tech University, 2021
+- GPA: 3.8/4.0
+- Dean's List: All semesters
+- Relevant Coursework: Data Structures, Algorithms, Web Development
+
+PROJECTS
+
+E-Commerce Platform
+- Built a full-stack e-commerce platform using MERN stack
+- Implemented real-time inventory management
+- Integrated Stripe payment gateway
+- Used Redux for state management
+
+Chat Application
+- Developed a real-time chat application using Socket.io
+- Implemented end-to-end encryption
+- Built responsive UI using Material-UI
+- Deployed on AWS using Docker
+
+CERTIFICATIONS
+- AWS Certified Developer Associate
+- MongoDB Certified Developer
+- React.js Advanced Concepts
