@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import {
     Container,
     Typography,
@@ -16,13 +17,12 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField,
     Grid,
-    Snackbar
+    Snackbar,
+    Checkbox
 } from '@mui/material';
 import {
     Edit,
-    Check
 } from '@mui/icons-material';
 
 const roleBasedLearningPaths = {
@@ -99,6 +99,7 @@ const defaultLearningPath = {
 };
 
 const LearningPath = () => {
+    const theme = useTheme();
     const [expandedStep, setExpandedStep] = useState(-1);
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -376,20 +377,17 @@ const LearningPath = () => {
                                         }}
                                     >
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <TextField
-                                                type="checkbox"
+                                            <Checkbox
                                                 checked={course.completed}
                                                 onChange={() => handleCourseToggle(stepIndex, course.id)}
                                                 color="primary"
+                                                size="small"
                                             />
                                             <Typography>{course.name}</Typography>
                                         </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Typography>{course.duration}</Typography>
-                                            {course.completed && (
-                                                <Check color="success" fontSize="small" />
-                                            )}
-                                        </Box>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {course.duration}
+                                        </Typography>
                                     </Box>
                                 ))}
                             </Box>
@@ -397,6 +395,26 @@ const LearningPath = () => {
                     </Step>
                 ))}
             </Stepper>
+
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={3000}
+                onClose={() => setOpenSnackbar(false)}
+                message={snackbarMessage}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                sx={{
+                    '& .MuiSnackbarContent-root': {
+                        bgcolor: theme.palette.mode === 'dark' ? '#2A2B32' : '#ffffff',
+                        color: theme.palette.mode === 'dark' ? '#d1d5db' : '#374151',
+                        border: 1,
+                        borderColor: theme.palette.mode === 'dark' ? '#565869' : '#d9d9e3',
+                        boxShadow: theme.shadows[3],
+                        minWidth: '300px',
+                        zIndex: theme.zIndex.drawer + 2
+                    }
+                }}
+            />
 
             {/* Bulk Edit Dialog */}
             <Dialog open={editDialogOpen} onClose={handleCloseEditDialog}>
@@ -428,14 +446,6 @@ const LearningPath = () => {
                     <Button onClick={handleCloseEditDialog}>Cancel</Button>
                 </DialogActions>
             </Dialog>
-
-            {/* Notification Snackbar */}
-            <Snackbar
-                open={openSnackbar}
-                autoHideDuration={3000}
-                onClose={() => setOpenSnackbar(false)}
-                message={snackbarMessage}
-            />
         </Container>
     );
 };

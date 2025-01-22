@@ -7,7 +7,11 @@ import {
   Button,
   Box,
   Grid,
-  Alert
+  Alert,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfile } from '../../store/slices/authSlice';
@@ -139,14 +143,19 @@ const Profile = () => {
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Desired Role"
-                      name="desiredRole"
-                      value={formData.desiredRole}
-                      onChange={handleChange}
-                      variant="outlined"
-                    />
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel>Desired Role</InputLabel>
+                      <Select
+                        label="Desired Role"
+                        name="desiredRole"
+                        value={formData.desiredRole}
+                        onChange={handleChange}
+                      >
+                        <MenuItem value="Software Developer">Software Developer</MenuItem>
+                        <MenuItem value="Data Scientist">Data Scientist</MenuItem>
+                        <MenuItem value="UI/UX Designer">UI/UX Designer</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={12}>
                     <TextField

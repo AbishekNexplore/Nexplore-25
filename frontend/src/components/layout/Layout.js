@@ -10,18 +10,15 @@ const Layout = ({ children }) => {
             display: 'flex', 
             flexDirection: 'column', 
             minHeight: '100vh',
-            background: theme.palette.background.default,
+            bgcolor: theme.palette.background.default
         }}>
-            <Box sx={{ height: '64px', flexShrink: 0 }}>
-                <Navbar />
-            </Box>
+            <Navbar />
             <Box
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    pt: 3,
-                    pb: 3,
-                    background: theme.palette.background.default,
+                    p: 3,
+                    mt: '64px' // Add margin top to account for fixed navbar
                 }}
             >
                 {children}

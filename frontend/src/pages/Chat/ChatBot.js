@@ -6,7 +6,8 @@ import {
     TextField,
     IconButton,
     Avatar,
-    CircularProgress
+    CircularProgress,
+    Button
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import SendIcon from '@mui/icons-material/Send';
@@ -82,69 +83,80 @@ const ChatBot = () => {
         return messages.map((msg, index) => {
             if (!msg || !msg.role || !msg.content) return null;
             
+            const isAssistant = msg.role === 'assistant';
+            
             return (
                 <Box
                     key={index}
                     sx={{
                         display: 'flex',
-                        gap: 2,
-                        p: 2,
-                        bgcolor: msg.role === 'assistant'
-                            ? theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc'
-                            : 'transparent',
-                        width: '100%',
-                        borderRadius: 2,
-                        mb: 2
+                        p: 3,
+                        bgcolor: isAssistant 
+                            ? theme.palette.mode === 'dark' ? '#444654' : '#f7f7f8'
+                            : theme.palette.mode === 'dark' ? '#343541' : '#ffffff',
+                        borderTop: 1,
+                        borderBottom: 1,
+                        borderColor: theme.palette.mode === 'dark' ? '#2A2B32' : '#d9d9e3',
+                        width: '100%'
                     }}
                 >
-                    <Avatar
+                    <Box
                         sx={{
-                            width: 48,
-                            height: 48,
-                            bgcolor: 'transparent'
+                            maxWidth: '800px',
+                            width: '100%',
+                            mx: 'auto',
+                            display: 'flex',
+                            gap: 2
                         }}
                     >
-                        {msg.role === 'assistant' ? (
-                            <Box 
-                                component="div" 
-                                sx={{ 
-                                    width: 40, 
-                                    height: 40,
-                                    '& svg': {
-                                        width: '100%',
-                                        height: '100%',
-                                        fill: 'currentColor',
-                                        color: theme.palette.mode === 'dark' ? '#7aa2f7' : '#2563eb'
-                                    }
-                                }}
-                            >
-                                <MapLogo />
-                            </Box>
-                        ) : (
-                            <Box 
-                                component="div" 
-                                sx={{ 
-                                    width: 32, 
-                                    height: 32,
-                                    '& svg': {
-                                        width: '100%',
-                                        height: '100%',
-                                        fill: 'currentColor',
-                                        color: theme.palette.mode === 'dark' ? '#9ece6a' : '#059669'
-                                    }
-                                }}
-                            >
-                                <UserAvatar />
-                            </Box>
-                        )}
-                    </Avatar>
-                    <Box sx={{ flexGrow: 1 }}>
+                        <Avatar
+                            sx={{
+                                width: 30,
+                                height: 30,
+                                bgcolor: 'transparent'
+                            }}
+                        >
+                            {isAssistant ? (
+                                <Box 
+                                    component="div" 
+                                    sx={{ 
+                                        width: 24, 
+                                        height: 24,
+                                        '& svg': {
+                                            width: '100%',
+                                            height: '100%',
+                                            fill: 'currentColor',
+                                            color: theme.palette.mode === 'dark' ? '#7aa2f7' : '#2563eb'
+                                        }
+                                    }}
+                                >
+                                    <MapLogo />
+                                </Box>
+                            ) : (
+                                <Box 
+                                    component="div" 
+                                    sx={{ 
+                                        width: 24, 
+                                        height: 24,
+                                        '& svg': {
+                                            width: '100%',
+                                            height: '100%',
+                                            fill: 'currentColor',
+                                            color: theme.palette.mode === 'dark' ? '#9ece6a' : '#059669'
+                                        }
+                                    }}
+                                >
+                                    <UserAvatar />
+                                </Box>
+                            )}
+                        </Avatar>
                         <Typography
                             variant="body1"
                             sx={{
-                                color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155',
+                                color: theme.palette.mode === 'dark' ? '#d1d5db' : '#374151',
                                 whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word'
+                                wordBreak: 'break-word',
+                                lineHeight: 1.7
                             }}
                         >
                             {msg.content}
@@ -158,21 +170,24 @@ const ChatBot = () => {
     return (
         <Box sx={{ 
             display: 'flex',
-            bgcolor: theme.palette.mode === 'dark' ? '#1a1b26' : '#f0f4f8', 
-            height: '100%' 
+            flexDirection: 'column',
+            alignItems: 'center',
+            bgcolor: theme.palette.mode === 'dark' ? '#343541' : '#ffffff', 
+            minHeight: '100vh',
+            width: '100%'
         }}>
             <Navbar />
             {/* Main Chat Area */}
             <Box
                 component="main"
                 sx={{
-                    flexGrow: 1,
-                    p: 0,
                     width: '100%',
-                    height: '100vh',
+                    maxWidth: '800px',
+                    minHeight: 'calc(100vh - 64px)',
                     display: 'flex',
                     flexDirection: 'column',
-                    pt: '64px'
+                    pt: '64px',
+                    mx: 'auto'
                 }}
             >
                 {/* Messages Container */}
@@ -180,48 +195,66 @@ const ChatBot = () => {
                     sx={{
                         flexGrow: 1,
                         overflow: 'auto',
-                        p: 2,
                         width: '100%',
                         '&::-webkit-scrollbar': {
-                            width: '8px',
+                            width: '6px',
                         },
                         '&::-webkit-scrollbar-track': {
-                            background: theme.palette.mode === 'dark' ? '#1a1b26' : '#f1f5f9'
+                            background: 'transparent'
                         },
                         '&::-webkit-scrollbar-thumb': {
-                            background: theme.palette.mode === 'dark' ? '#24283b' : '#cbd5e1',
-                            borderRadius: '4px',
+                            background: theme.palette.mode === 'dark' ? '#565869' : '#d9d9e3',
+                            borderRadius: '3px',
                         },
                         '&::-webkit-scrollbar-thumb:hover': {
-                            background: theme.palette.mode === 'dark' ? '#414868' : '#94a3b8'
+                            background: theme.palette.mode === 'dark' ? '#666980' : '#c5c5d2'
                         }
                     }}
                 >
+                    {messages.length === 0 && (
+                        <Box sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center',
+                            height: '50vh',
+                            flexDirection: 'column',
+                            gap: 2,
+                            color: theme.palette.mode === 'dark' ? '#c5c5d2' : '#6e6e80'
+                        }}>
+                            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                                AI Career Navigator
+                            </Typography>
+                            <Typography variant="body1">
+                                How can I help with your career today?
+                            </Typography>
+                        </Box>
+                    )}
                     {renderMessages()}
                     {isLoading && (
                         <Box
                             sx={{
                                 display: 'flex',
                                 gap: 2,
-                                p: 2,
-                                bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc',
+                                p: 3,
+                                bgcolor: theme.palette.mode === 'dark' ? '#444654' : '#f7f7f8',
                                 width: '100%',
-                                borderRadius: 2,
-                                mb: 2
+                                borderTop: 1,
+                                borderBottom: 1,
+                                borderColor: theme.palette.mode === 'dark' ? '#2A2B32' : '#d9d9e3'
                             }}
                         >
                             <Avatar
                                 sx={{
-                                    width: 48,
-                                    height: 48,
+                                    width: 30,
+                                    height: 30,
                                     bgcolor: 'transparent'
                                 }}
                             >
                                 <Box 
                                     component="div" 
                                     sx={{ 
-                                        width: 40, 
-                                        height: 40,
+                                        width: 24, 
+                                        height: 24,
                                         '& svg': {
                                             width: '100%',
                                             height: '100%',
@@ -236,9 +269,9 @@ const ChatBot = () => {
                             <Box sx={{ 
                                 display: 'flex', 
                                 alignItems: 'center',
-                                color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155'
+                                color: theme.palette.mode === 'dark' ? '#c5c5d2' : '#6e6e80'
                             }}>
-                                <CircularProgress size={20} thickness={4} sx={{ mr: 2 }} />
+                                <CircularProgress size={16} thickness={6} sx={{ mr: 2 }} />
                                 Thinking...
                             </Box>
                         </Box>
@@ -248,79 +281,117 @@ const ChatBot = () => {
 
                 {/* Input Container */}
                 <Box
+                    component="form"
+                    onSubmit={handleSubmit}
                     sx={{
-                        display: 'flex',
-                        gap: 2,
                         p: 2,
-                        bgcolor: theme.palette.mode === 'dark' ? '#1a1b26' : '#ffffff',
-                        borderTop: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        width: '100%',
+                        maxWidth: '800px',
+                        mx: 'auto',
+                        position: 'sticky',
+                        bottom: 0,
+                        pb: 4,
+                        bgcolor: theme.palette.mode === 'dark' ? '#343541' : '#ffffff',
+                        borderTop: 1,
+                        borderColor: theme.palette.mode === 'dark' ? '#2A2B32' : '#d9d9e3'
                     }}
                 >
-                    <IconButton
-                        onClick={handleNewChat}
-                        sx={{
-                            color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155',
-                            '&:hover': {
-                                bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc'
-                            }
-                        }}
-                    >
-                        <AddIcon />
-                    </IconButton>
-                    <Box
-                        component="form"
-                        onSubmit={handleSubmit}
-                        sx={{
-                            display: 'flex',
-                            gap: 1,
-                            flexGrow: 1,
-                        }}
-                    >
-                        <TextField
-                            fullWidth
-                            value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSubmit(e);
+                    <Box sx={{ 
+                        display: 'flex',
+                        gap: 2,
+                        width: '100%',
+                        alignItems: 'flex-start'
+                    }}>
+                        <Button
+                            onClick={handleNewChat}
+                            startIcon={<AddIcon />}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                                minWidth: 'auto',
+                                height: '56px',
+                                borderColor: theme.palette.mode === 'dark' ? '#565869' : '#d9d9e3',
+                                color: theme.palette.mode === 'dark' ? '#d1d5db' : '#374151',
+                                textTransform: 'none',
+                                display: 'flex',
+                                alignItems: 'center',
+                                '&:hover': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#666980' : '#c5c5d2',
+                                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(86, 88, 105, 0.1)' : 'rgba(217, 217, 227, 0.1)'
                                 }
                             }}
-                            placeholder="Type your message here..."
-                            multiline
-                            maxRows={5}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#ffffff',
-                                    '& fieldset': {
-                                        borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                    },
-                                    '&:hover fieldset': {
-                                        borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                                    },
-                                    '& textarea': {
-                                        color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
+                        >
+                            New
+                        </Button>
+
+                        <Box sx={{ 
+                            display: 'flex',
+                            gap: 1,
+                            width: '100%',
+                            position: 'relative'
+                        }}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                maxRows={4}
+                                value={userInput}
+                                onChange={(e) => setUserInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSubmit(e);
                                     }
-                                },
-                            }}
-                            InputProps={{
-                                endAdornment: (
-                                    <IconButton 
-                                        type="submit"
-                                        disabled={!userInput.trim() || isLoading}
-                                        sx={{ 
-                                            color: theme.palette.mode === 'dark' ? '#c0caf5' : '#334155',
-                                            '&:hover': {
-                                                bgcolor: theme.palette.mode === 'dark' ? '#24283b' : '#f8fafc'
-                                            }
-                                        }}
-                                    >
-                                        <SendIcon />
-                                    </IconButton>
-                                ),
-                            }}
-                        />
+                                }}
+                                placeholder="Send a message..."
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        height: '56px',
+                                        bgcolor: theme.palette.mode === 'dark' ? '#40414f' : '#ffffff',
+                                        border: '1px solid',
+                                        borderColor: theme.palette.mode === 'dark' ? '#565869' : '#d9d9e3',
+                                        borderRadius: 2,
+                                        boxShadow: '0 0 8px rgba(0,0,0,0.1)',
+                                        '&:hover': {
+                                            borderColor: theme.palette.mode === 'dark' ? '#666980' : '#c5c5d2'
+                                        },
+                                        '&.Mui-focused': {
+                                            borderColor: theme.palette.primary.main,
+                                            boxShadow: `0 0 0 2px ${theme.palette.primary.main}20`
+                                        }
+                                    }
+                                }}
+                            />
+                            <IconButton 
+                                type="submit"
+                                disabled={!userInput.trim() || isLoading}
+                                sx={{
+                                    position: 'absolute',
+                                    right: 8,
+                                    bottom: 8,
+                                    color: theme.palette.mode === 'dark' ? '#c5c5d2' : '#6e6e80',
+                                    '&:hover': {
+                                        bgcolor: 'transparent',
+                                        color: theme.palette.primary.main
+                                    }
+                                }}
+                            >
+                                <SendIcon />
+                            </IconButton>
+                        </Box>
                     </Box>
+                    <Typography 
+                        variant="caption" 
+                        align="center"
+                        sx={{ 
+                            color: theme.palette.mode === 'dark' ? '#c5c5d2' : '#6e6e80',
+                            mt: -1 
+                        }}
+                    >
+                        Free Research Preview. Our goal is to help you navigate your career path effectively.
+                    </Typography>
                 </Box>
             </Box>
         </Box>

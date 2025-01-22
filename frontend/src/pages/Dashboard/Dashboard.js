@@ -555,79 +555,104 @@ const Dashboard = () => {
                         backdropFilter: 'blur(10px)',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'center'
+                        gap: 3,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 4,
+                            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+                        }
                     }}>
-                        <Typography variant="h6" sx={{ 
-                            mb: 3, 
-                            fontWeight: 600, 
-                            color: 'text.primary',
-                            position: 'relative',
-                            '&::after': {
-                                content: '""',
-                                position: 'absolute',
-                                bottom: -8,
-                                left: 0,
-                                width: 32,
-                                height: 2,
-                                bgcolor: theme.palette.primary.main,
-                                borderRadius: 1
-                            }
-                        }}>
-                            Quick Stats
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h6" sx={{ 
+                                fontWeight: 600, 
+                                color: 'text.primary',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                            }}>
+                                <TrendingUp sx={{ color: theme.palette.primary.main }} />
+                                Quick Stats
+                            </Typography>
+                            <Chip 
+                                label="Today" 
+                                size="small" 
+                                color="primary" 
+                                variant="outlined"
+                                sx={{ borderRadius: 1 }}
+                            />
+                        </Box>
+                        
                         <Grid container spacing={2}>
                             {[
                                 { 
                                     label: 'Courses Completed', 
                                     value: '12', 
                                     icon: <CheckCircle sx={{ fontSize: 28 }} color="success" />,
-                                    trend: '+2 this week'
+                                    trend: '+2 this week',
+                                    color: theme.palette.success.main
                                 },
                                 { 
                                     label: 'Hours Learning', 
                                     value: '48', 
                                     icon: <AccessTime sx={{ fontSize: 28 }} color="primary" />,
-                                    trend: '+5 hrs today'
+                                    trend: '+5 hrs today',
+                                    color: theme.palette.primary.main
+                                },
+                                { 
+                                    label: 'Skills Gained', 
+                                    value: '8', 
+                                    icon: <Psychology sx={{ fontSize: 28 }} color="secondary" />,
+                                    trend: '+1 new skill',
+                                    color: theme.palette.secondary.main
+                                },
+                                { 
+                                    label: 'Current Streak', 
+                                    value: '5', 
+                                    icon: <LocalCafe sx={{ fontSize: 28 }} color="warning" />,
+                                    trend: 'days',
+                                    color: theme.palette.warning.main
                                 }
                             ].map((stat, index) => (
                                 <Grid item xs={6} key={index}>
                                     <Box sx={{ 
-                                        textAlign: 'center',
                                         p: 2,
                                         borderRadius: 2,
-                                        bgcolor: theme.palette.mode === 'dark' 
-                                            ? alpha(theme.palette.primary.main, 0.1) 
-                                            : alpha(theme.palette.primary.light, 0.1),
+                                        bgcolor: alpha(stat.color, 0.08),
+                                        border: 1,
+                                        borderColor: alpha(stat.color, 0.2),
+                                        transition: 'all 0.3s ease',
                                         '&:hover': {
-                                            bgcolor: theme.palette.mode === 'dark'
-                                                ? alpha(theme.palette.primary.main, 0.15)
-                                                : alpha(theme.palette.primary.light, 0.15)
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: `0 4px 12px ${alpha(stat.color, 0.2)}`,
+                                            bgcolor: alpha(stat.color, 0.12)
                                         }
                                     }}>
-                                        {stat.icon}
-                                        <Typography variant="h5" sx={{ 
-                                            mt: 1,
-                                            mb: 0.5,
-                                            fontWeight: 'bold',
-                                            color: theme.palette.mode === 'dark' 
-                                                ? theme.palette.primary.light
-                                                : theme.palette.primary.main
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                            {stat.icon}
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                                {stat.label}
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="h4" sx={{ 
+                                            fontWeight: 700,
+                                            color: stat.color,
+                                            mb: 0.5
                                         }}>
                                             {stat.value}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            {stat.label}
-                                        </Typography>
-                                        <Typography variant="caption" 
-                                            sx={{ 
-                                                color: theme.palette.success.main,
-                                                bgcolor: alpha(theme.palette.success.main, 0.1),
-                                                px: 1,
-                                                py: 0.5,
-                                                borderRadius: 1,
-                                                fontWeight: 500
-                                            }}
-                                        >
+                                        <Typography variant="caption" sx={{ 
+                                            color: alpha(theme.palette.text.primary, 0.7),
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5
+                                        }}>
+                                            <TrendingUp sx={{ fontSize: 16, color: theme.palette.success.main }} />
                                             {stat.trend}
                                         </Typography>
                                     </Box>
@@ -841,7 +866,7 @@ const Dashboard = () => {
                                     borderRadius: 2
                                 }
                             }}>
-                                Career Companion Hub
+                                Career Companion
                             </Typography>
                         </Grid>
                         <Grid item xs={12}>

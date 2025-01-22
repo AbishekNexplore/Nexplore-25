@@ -49,27 +49,10 @@ const Navbar = () => {
     return (
         <AppBar 
             position="fixed" 
-            sx={{ 
-                zIndex: theme => theme.zIndex.drawer + 1,
-                bgcolor: theme.palette.mode === 'dark' ? '#1a1b26' : '#f0f4f8',
-                borderBottom: 1,
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                height: '64px',
-                '& .MuiToolbar-root': {
-                    minHeight: '64px',
-                    height: '64px',
-                    position: 'relative',
-                    zIndex: 'inherit'
-                },
-                '& .MuiTypography-root': {
-                    color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
-                },
-                '& .MuiSvgIcon-root': {
-                    color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
-                },
-                '& .MuiButton-root': {
-                    color: theme.palette.mode === 'dark' ? '#c0caf5' : '#2c4257'
-                }
+            sx={{
+                backgroundColor: theme.palette.background.paper,
+                boxShadow: theme.shadows[1],
+                zIndex: theme.zIndex.drawer + 1
             }}
         >
             <Toolbar>
@@ -87,12 +70,11 @@ const Navbar = () => {
                     variant="h6" 
                     component="div" 
                     sx={{ 
-                        flexGrow: 1, 
-                        fontWeight: 600, 
-                        letterSpacing: '.5px'
+                        flexGrow: 1,
+                        color: theme.palette.text.primary
                     }}
                 >
-                    Career Navigator
+                    AI Career Navigator
                 </Typography>
 
                 {isAuthenticated ? (
@@ -104,21 +86,22 @@ const Navbar = () => {
                         >
                             <Notifications />
                         </IconButton>
-                        <IconButton
-                            size="large"
-                            aria-label="go to dashboard"
-                            color="inherit"
+                        <Button
+                            color="primary"
+                            startIcon={<Dashboard />}
                             onClick={handleDashboard}
+                            sx={{ mr: 2 }}
                         >
-                            <Dashboard />
-                        </IconButton>
+                            Dashboard
+                        </Button>
                         <IconButton
                             size="large"
+                            edge="end"
                             aria-label="account of current user"
                             aria-controls="menu-appbar"
                             aria-haspopup="true"
                             onClick={handleMenu}
-                            color="inherit"
+                            color="primary"
                         >
                             {user?.avatar ? (
                                 <Avatar 
@@ -144,12 +127,6 @@ const Navbar = () => {
                             }}
                             open={Boolean(anchorEl)}
                             onClose={handleClose}
-                            sx={{
-                                '& .MuiPaper-root': {
-                                    mt: 1,
-                                    minWidth: 120
-                                }
-                            }}
                         >
                             <MenuItem onClick={handleProfile}>Profile</MenuItem>
                             <MenuItem onClick={handleLogout}>Logout</MenuItem>
